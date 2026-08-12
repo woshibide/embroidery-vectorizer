@@ -422,7 +422,7 @@
       left: 0;
       right: 0;
       display: grid;
-      grid-template-columns: auto minmax(190px, 1fr) auto;
+      grid-template-columns: auto minmax(360px, 1.6fr) auto;
       align-items: center;
       gap: 16px;
       min-height: 69px;
@@ -463,7 +463,7 @@
       justify-content: center;
       gap: 10px;
       min-width: 0;
-      max-width: 360px;
+      max-width: 640px;
       width: 100%;
       justify-self: center;
     }
@@ -529,22 +529,41 @@
       position: absolute;
       inset: 0 auto 0 0;
       width: 0;
-      background: #ffe0da;
+      background: rgba(243, 38, 18, .30);
       content: "";
-      transition: width 120ms linear;
+      pointer-events: none;
     }
 
-    .recalculate-button:disabled::before { width: var(--progress, 0%); }
+    .recalculate-button.is-counting::before {
+      animation: semi-auto-countdown 3s cubic-bezier(.20, .04, .26, 1) forwards;
+    }
 
     .recalculate-button span { position: relative; z-index: 1; }
-    .recalculate-button:hover,
-    .recalculate-button.is-dirty { background: var(--red); color: #fff; }
-    .recalculate-button:disabled { cursor: wait; opacity: .72; }
+    .recalculate-button:not(.is-counting):not(.is-triggering):hover,
+    .recalculate-button.is-dirty,
+    .recalculate-button.is-pressed { background: var(--red); color: #fff; }
+    .recalculate-button.is-triggering { animation: semi-auto-flicker 180ms steps(2, end); }
+    .recalculate-button:disabled { cursor: wait; }
+
+    @keyframes semi-auto-countdown {
+      0% { width: 0; opacity: .12; }
+      58% { opacity: .24; }
+      100% { width: 100%; opacity: .46; }
+    }
+
+    @keyframes semi-auto-flicker {
+      0%, 45% { background: #fff; color: var(--red); }
+      46%, 72% { background: var(--red); color: #fff; }
+      73%, 84% { background: #fff; color: var(--red); }
+      85%, 100% { background: var(--red); color: #fff; }
+    }
 
     .auto-toggle {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 7px;
+      min-width: 84px;
       padding: 0 9px;
     }
 
@@ -556,8 +575,10 @@
       content: "";
     }
 
-    .auto-toggle[aria-checked="true"] { background: var(--red); color: #fff; }
-    .auto-toggle[aria-checked="true"]::before { border-color: #fff; background: #fff; }
+    .auto-toggle[data-mode="auto"] { background: var(--red); color: #fff; }
+    .auto-toggle[data-mode="auto"]::before { border-color: #fff; background: #fff; }
+    .auto-toggle[data-mode="semi"]::before { background: linear-gradient(90deg, var(--red) 50%, #fff 50%); }
+    .auto-toggle[data-mode="manual"]::before { background: #fff; }
 
     .icon-button {
       min-width: 34px;
@@ -974,6 +995,11 @@
     .palette-hex { color: var(--muted); }
     .palette-share { color: var(--red); text-align: right; }
 
+    @media (max-width: 1280px) {
+      .workspace-bar { grid-template-columns: auto minmax(220px, 1fr) auto; }
+      .calculation-control { gap: 7px; }
+    }
+
     @media (max-width: 820px) {
       body { overflow: auto; }
       .app { grid-template-columns: 1fr; }
@@ -1118,14 +1144,14 @@
           <button class="view-tab" data-view="overlay" role="tab">Layers</button>
         </div>
         <div class="calculation-control" id="calculation-control">
+          <button class="recalculate-button" id="recalculate" type="button" hidden><span>Recalculate</span></button>
           <div class="progress-control" id="progress-control" aria-live="polite">
             <div class="progress-track" role="progressbar" aria-label="Posterization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
               <div class="progress-fill" id="progress-fill"></div>
             </div>
             <span class="progress-label" id="progress-label">Ready</span>
           </div>
-          <button class="recalculate-button" id="recalculate" type="button" hidden><span>Recalculate</span></button>
-          <button class="auto-toggle" id="auto-toggle" type="button" role="switch" aria-checked="true" aria-label="Toggle automatic recalculation">Auto</button>
+          <button class="auto-toggle" id="auto-toggle" type="button" data-mode="auto" aria-label="Calculation mode: Auto">Auto</button>
         </div>
         <div class="canvas-actions">
           <button class="icon-button" id="zoom-out" type="button" aria-label="Zoom out">−</button>
@@ -1179,7 +1205,7 @@
     heatmapExpanded: false,
     edges: new Map(),
     expandedEdges: new Set(),
-    auto: true,
+    calculationMode: "auto",
     autoPreferenceTouched: false,
     isLarge: false,
     dirty: false,
@@ -1248,6 +1274,7 @@
   let sketch = null;
   let toastTimer = null;
   let posterizeTimer = null;
+  let semiPressTimer = null;
 
   const nextPaint = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
 
@@ -1629,21 +1656,56 @@
   function setProgress(value, label) {
     const percent = clamp(Math.round(value), 0, 100);
     els.progressFill.style.setProperty("--progress", `${percent}%`);
-    els.recalculate.style.setProperty("--progress", `${percent}%`);
     els.progressTrack.setAttribute("aria-valuenow", String(percent));
     els.progressLabel.textContent = label || `${percent}%`;
-    if (state.calculating) els.recalculateLabel.textContent = `${percent}% calculating`;
+  }
+
+  function cancelScheduledPosterize() {
+    clearTimeout(posterizeTimer);
+    clearTimeout(semiPressTimer);
+    posterizeTimer = null;
+    semiPressTimer = null;
+    els.recalculate.classList.remove("is-counting", "is-triggering");
+  }
+
+  function scheduleSemiPosterize(revision = state.calculationRevision) {
+    cancelScheduledPosterize();
+    if (!state.pixels || state.calculating || state.calculationMode !== "semi") return;
+    // Reading layout restarts the countdown animation when another change arrives.
+    void els.recalculate.offsetWidth;
+    els.recalculate.classList.add("is-counting");
+    els.status.textContent = "Semi-auto · recalculating in 3 seconds";
+    posterizeTimer = setTimeout(() => {
+      posterizeTimer = null;
+      if (revision !== state.calculationRevision || state.calculationMode !== "semi" || state.calculating) return;
+      els.recalculate.classList.remove("is-counting");
+      els.recalculate.classList.add("is-triggering");
+      semiPressTimer = setTimeout(() => {
+        semiPressTimer = null;
+        els.recalculate.classList.remove("is-triggering");
+        if (revision === state.calculationRevision && state.calculationMode === "semi") posterize(revision);
+      }, 180);
+    }, 3000);
   }
 
   function updateCalculationControl() {
-    const manualPresentation = state.isLarge || !state.auto;
-    els.progressControl.hidden = manualPresentation;
-    els.recalculate.hidden = !manualPresentation;
+    const mode = state.calculationMode;
+    els.progressControl.hidden = false;
+    els.recalculate.hidden = mode === "auto";
     els.recalculate.disabled = state.calculating;
-    els.recalculate.classList.toggle("is-dirty", state.dirty && !state.calculating);
+    els.recalculate.classList.toggle("is-dirty", mode === "manual" && state.dirty && !state.calculating);
+    els.recalculate.classList.toggle("is-pressed", mode !== "auto" && state.calculating);
     if (!state.calculating) els.recalculateLabel.textContent = "Recalculate";
-    els.autoToggle.setAttribute("aria-checked", state.auto ? "true" : "false");
-    els.autoToggle.title = state.auto ? "Changes calculate instantly" : "Changes wait for Recalculate";
+    const labels = { auto: "Auto", semi: "Semi · 3s", manual: "Manual" };
+    const descriptions = {
+      auto: "Changes calculate instantly",
+      semi: "Changes calculate after a 3 second pause",
+      manual: "Changes wait for Recalculate"
+    };
+    els.autoToggle.dataset.mode = mode;
+    els.autoToggle.textContent = labels[mode];
+    els.autoToggle.setAttribute("aria-label", `Calculation mode: ${labels[mode]}`);
+    els.autoToggle.title = descriptions[mode];
   }
 
   function toast(message) {
@@ -2004,7 +2066,7 @@
 
   async function posterize(revision = state.calculationRevision) {
     if (!state.pixels) return;
-    clearTimeout(posterizeTimer);
+    cancelScheduledPosterize();
     const runId = ++state.runId;
     state.calculating = true;
     state.dirty = true;
@@ -2242,14 +2304,21 @@
   }
 
   function queuePosterize() {
-    clearTimeout(posterizeTimer);
+    cancelScheduledPosterize();
     state.calculationRevision++;
     state.dirty = true;
-    els.status.textContent = state.auto ? "Updating posterize" : "Changes ready to calculate";
+    const mode = state.calculationMode;
+    els.status.textContent = mode === "auto"
+      ? "Updating posterize"
+      : mode === "semi"
+        ? "Semi-auto · recalculating in 3 seconds"
+        : "Changes ready to calculate";
     updateCalculationControl();
-    if (state.auto) {
+    if (mode === "auto") {
       const revision = state.calculationRevision;
       posterizeTimer = setTimeout(() => posterize(revision), 100);
+    } else if (mode === "semi") {
+      scheduleSemiPosterize(state.calculationRevision);
     }
   }
 
@@ -2757,7 +2826,7 @@
       state.edges.clear();
       state.expandedEdges.clear();
       state.isLarge = state.width * state.height > 4000000 || Math.max(state.width, state.height) > 4096;
-      if (state.isLarge && !state.autoPreferenceTouched) state.auto = false;
+      if (state.isLarge && !state.autoPreferenceTouched) state.calculationMode = "manual";
       state.calculationRevision++;
       state.dirty = true;
       els.thumb.src = src;
@@ -2769,11 +2838,12 @@
       computeHistogram();
       renderToneHistogram();
       renderPalette();
-      setProgress(0, state.auto ? "Queued" : "Awaiting");
+      setProgress(0, state.calculationMode === "auto" ? "Queued" : "Awaiting");
       updateCalculationControl();
       fitArtwork();
       if (sketch) sketch.redraw();
-      if (state.auto) await posterize(state.calculationRevision);
+      if (state.calculationMode === "auto") await posterize(state.calculationRevision);
+      else if (state.calculationMode === "semi") scheduleSemiPosterize(state.calculationRevision);
       else els.status.textContent = "Large image · adjust, then recalculate";
     };
     img.onerror = () => toast("Could not read that image");
@@ -2893,17 +2963,23 @@
     });
     els.recalculate.addEventListener("click", () => {
       if (!state.pixels || state.calculating) return;
-      clearTimeout(posterizeTimer);
+      cancelScheduledPosterize();
       posterize(state.calculationRevision);
     });
     els.autoToggle.addEventListener("click", () => {
-      state.auto = !state.auto;
+      const modes = ["auto", "semi", "manual"];
+      state.calculationMode = modes[(modes.indexOf(state.calculationMode) + 1) % modes.length];
       state.autoPreferenceTouched = true;
+      cancelScheduledPosterize();
       updateCalculationControl();
-      if (state.auto && state.dirty && !state.calculating) {
+      if (state.calculationMode === "auto" && state.dirty && !state.calculating) {
         const revision = state.calculationRevision;
         els.status.textContent = "Updating posterize";
         posterizeTimer = setTimeout(() => posterize(revision), 80);
+      } else if (state.calculationMode === "semi" && state.dirty && !state.calculating) {
+        scheduleSemiPosterize(state.calculationRevision);
+      } else if (state.calculationMode === "manual" && state.dirty) {
+        els.status.textContent = "Changes ready to calculate";
       }
     });
     $$(".view-tab").forEach(tab => tab.addEventListener("click", () => {
