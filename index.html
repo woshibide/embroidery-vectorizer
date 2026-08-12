@@ -274,7 +274,7 @@
 
     .tone-plot {
       position: relative;
-      height: 112px;
+      height: 152px;
       border-bottom: 1px solid var(--line);
       background-image: linear-gradient(to right, rgba(243, 38, 18, .09) 1px, transparent 1px);
       background-size: 25% 100%;
@@ -284,11 +284,45 @@
       display: block;
       width: 100%;
       height: 100%;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .tone-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tone-tool {
+      min-height: 25px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--red);
+      cursor: pointer;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .tone-tool:hover { background: var(--red); color: #fff; }
+    .tone-tool:disabled { cursor: default; opacity: .35; }
+    .tone-toolbar-note {
+      margin-left: auto;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 7px;
+      text-transform: uppercase;
     }
 
     .tone-sliders {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .tone-slider {
@@ -727,24 +761,26 @@
           </div>
           <div class="tone-panel">
             <div class="tone-plot">
-              <canvas id="tone-curve" aria-label="Image luminance histogram with black, curve, and white cutoff points"></canvas>
+              <canvas id="tone-curve" tabindex="0" aria-label="Editable Bézier tone curve over the source luminance histogram"></canvas>
+            </div>
+            <div class="tone-toolbar">
+              <button class="tone-tool" id="tone-add" type="button">＋ Point</button>
+              <button class="tone-tool" id="tone-remove" type="button" disabled>− Point</button>
+              <button class="tone-tool" id="tone-reset" type="button">Reset</button>
+              <span class="tone-toolbar-note">Drag points + handles</span>
             </div>
             <div class="tone-sliders">
               <label class="tone-slider">
-                <span class="tone-slider-head"><span>Black</span><output id="black-value">0</output></span>
-                <input id="black-point" type="range" min="0" max="96" value="0" aria-label="Black cutoff point">
+                <span class="tone-slider-head"><span>Analyze from</span><output id="black-value">0</output></span>
+                <input id="black-point" type="range" min="0" max="254" value="0" aria-label="Darkest luminance included in color analysis">
               </label>
               <label class="tone-slider">
-                <span class="tone-slider-head"><span>Curve</span><output id="gamma-value">1.00</output></span>
-                <input id="gamma" type="range" min="40" max="250" value="100" aria-label="Midtone curve">
-              </label>
-              <label class="tone-slider">
-                <span class="tone-slider-head"><span>White</span><output id="white-value">255</output></span>
-                <input id="white-point" type="range" min="159" max="255" value="255" aria-label="White cutoff point">
+                <span class="tone-slider-head"><span>Analyze to</span><output id="white-value">255</output></span>
+                <input id="white-point" type="range" min="1" max="255" value="255" aria-label="Lightest luminance included in color analysis">
               </label>
             </div>
           </div>
-          <p class="hint">The histogram shows source brightness. Pull in black or white cutoffs, then bend the curve to redistribute tones before colors are extracted.</p>
+          <p class="hint">Click the graph or add a point, then drag its anchor and Bézier handles. The range sliders exclude pixels that are too dark or too light before palette analysis.</p>
         </div>
 
         <div class="control">
@@ -842,7 +878,14 @@
     alpha: 1,
     toneBlack: 0,
     toneWhite: 255,
-    toneGamma: 1,
+    tonePoints: [
+      { x: 0, y: 0, handleIn: null, handleOut: { x: 1 / 3, y: 1 / 3 } },
+      { x: 1, y: 1, handleIn: { x: 2 / 3, y: 2 / 3 }, handleOut: null }
+    ],
+    toneLut: Uint8Array.from({ length: 256 }, (_, index) => index),
+    toneSelection: { type: "point", index: 0 },
+    toneDrag: null,
+    curveDirty: false,
     histogram: new Uint32Array(256),
     auto: true,
     autoPreferenceTouched: false,
@@ -881,10 +924,11 @@
     toneValue: $("#tone-value"),
     blackPoint: $("#black-point"),
     blackValue: $("#black-value"),
-    gamma: $("#gamma"),
-    gammaValue: $("#gamma-value"),
     whitePoint: $("#white-point"),
     whiteValue: $("#white-value"),
+    toneAdd: $("#tone-add"),
+    toneRemove: $("#tone-remove"),
+    toneReset: $("#tone-reset"),
     layers: $("#stat-shapes"),
     nodes: $("#stat-nodes"),
     pixels: $("#stat-pixels"),
@@ -920,14 +964,54 @@
 
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
+  function cubicBezier(a, b, c, d, t) {
+    const inverse = 1 - t;
+    return inverse ** 3 * a + 3 * inverse ** 2 * t * b + 3 * inverse * t ** 2 * c + t ** 3 * d;
+  }
+
+  function curveValueAt(normalizedX) {
+    const x = clamp(normalizedX, 0, 1);
+    const points = state.tonePoints;
+    let index = points.length - 2;
+    for (let i = 0; i < points.length - 1; i++) {
+      if (x <= points[i + 1].x) { index = i; break; }
+    }
+    const start = points[index];
+    const end = points[index + 1];
+    const out = start.handleOut || start;
+    const incoming = end.handleIn || end;
+    let low = 0;
+    let high = 1;
+    for (let iteration = 0; iteration < 14; iteration++) {
+      const t = (low + high) / 2;
+      const curveX = cubicBezier(start.x, out.x, incoming.x, end.x, t);
+      if (curveX < x) low = t;
+      else high = t;
+    }
+    const t = (low + high) / 2;
+    return clamp(cubicBezier(start.y, out.y, incoming.y, end.y, t), 0, 1);
+  }
+
+  function rebuildToneLut() {
+    for (let value = 0; value < 256; value++) {
+      state.toneLut[value] = Math.round(curveValueAt(value / 255) * 255);
+    }
+  }
+
   function mapToneValue(value) {
-    const range = Math.max(1, state.toneWhite - state.toneBlack);
-    const normalized = clamp((value - state.toneBlack) / range, 0, 1);
-    return Math.round(Math.pow(normalized, 1 / state.toneGamma) * 255);
+    return state.toneLut[clamp(Math.round(value), 0, 255)];
   }
 
   function applyToneCurve(rgb) {
     return rgb.map(mapToneValue);
+  }
+
+  function pixelLuminance(pixels, offset) {
+    return pixels[offset] * .2126 + pixels[offset + 1] * .7152 + pixels[offset + 2] * .0722;
+  }
+
+  function luminanceIsAnalyzed(luminance) {
+    return luminance >= state.toneBlack && luminance <= state.toneWhite;
   }
 
   function computeHistogram() {
@@ -938,9 +1022,114 @@
     for (let i = 0; i < pixelCount; i += step) {
       const p = i * 4;
       if (state.pixels[p + 3] < state.alpha) continue;
-      const luma = Math.round(state.pixels[p] * .2126 + state.pixels[p + 1] * .7152 + state.pixels[p + 2] * .0722);
+      const luma = Math.round(pixelLuminance(state.pixels, p));
       state.histogram[luma]++;
     }
+  }
+
+  function toneGraphPoint(point, width, height) {
+    const inset = 8;
+    return {
+      x: inset + point.x * (width - inset * 2),
+      y: height - inset - point.y * (height - inset * 2)
+    };
+  }
+
+  function normalizedTonePoint(x, y, width, height) {
+    const inset = 8;
+    return {
+      x: clamp((x - inset) / Math.max(1, width - inset * 2), 0, 1),
+      y: clamp((height - inset - y) / Math.max(1, height - inset * 2), 0, 1)
+    };
+  }
+
+  function updateToneSelectionUI() {
+    const selected = state.toneSelection;
+    els.toneRemove.disabled = !selected || selected.type !== "point" || selected.index === 0 || selected.index === state.tonePoints.length - 1;
+  }
+
+  function normalizeToneHandles() {
+    const points = state.tonePoints;
+    for (let index = 0; index < points.length; index++) {
+      const point = points[index];
+      const previous = points[index - 1];
+      const next = points[index + 1];
+      if (point.handleIn) {
+        point.handleIn.x = clamp(point.handleIn.x, previous?.x ?? point.x, point.x);
+        point.handleIn.y = clamp(point.handleIn.y, 0, 1);
+      }
+      if (point.handleOut) {
+        point.handleOut.x = clamp(point.handleOut.x, point.x, next?.x ?? point.x);
+        point.handleOut.y = clamp(point.handleOut.y, 0, 1);
+      }
+    }
+  }
+
+  function addTonePoint(x, y = curveValueAt(x)) {
+    const points = state.tonePoints;
+    const normalizedX = clamp(x, .01, .99);
+    const existing = points.findIndex(point => Math.abs(point.x - normalizedX) < .015);
+    if (existing >= 0) {
+      state.toneSelection = { type: "point", index: existing };
+      updateToneSelectionUI();
+      return existing;
+    }
+    let index = points.findIndex(point => point.x > normalizedX);
+    if (index < 0) index = points.length - 1;
+    const previous = points[index - 1];
+    const next = points[index];
+    const span = Math.min(normalizedX - previous.x, next.x - normalizedX) / 2;
+    const slope = (next.y - previous.y) / Math.max(.001, next.x - previous.x);
+    const normalizedY = clamp(y, 0, 1);
+    points.splice(index, 0, {
+      x: normalizedX,
+      y: normalizedY,
+      handleIn: { x: normalizedX - span, y: clamp(normalizedY - slope * span, 0, 1) },
+      handleOut: { x: normalizedX + span, y: clamp(normalizedY + slope * span, 0, 1) }
+    });
+    state.toneSelection = { type: "point", index };
+    normalizeToneHandles();
+    updateToneSelectionUI();
+    return index;
+  }
+
+  function addTonePointInLargestGap() {
+    let start = state.tonePoints[0];
+    let widest = -1;
+    for (let index = 0; index < state.tonePoints.length - 1; index++) {
+      const candidate = state.tonePoints[index];
+      const gap = state.tonePoints[index + 1].x - candidate.x;
+      if (gap > widest) { widest = gap; start = candidate; }
+    }
+    const x = start.x + widest / 2;
+    addTonePoint(x, curveValueAt(x));
+    rebuildToneLut();
+    renderToneHistogram();
+    queuePosterize();
+  }
+
+  function removeSelectedTonePoint() {
+    const selected = state.toneSelection;
+    if (!selected || selected.type !== "point" || selected.index <= 0 || selected.index >= state.tonePoints.length - 1) return;
+    state.tonePoints.splice(selected.index, 1);
+    state.toneSelection = { type: "point", index: Math.max(0, selected.index - 1) };
+    normalizeToneHandles();
+    rebuildToneLut();
+    updateToneSelectionUI();
+    renderToneHistogram();
+    queuePosterize();
+  }
+
+  function resetToneCurve() {
+    state.tonePoints = [
+      { x: 0, y: 0, handleIn: null, handleOut: { x: 1 / 3, y: 1 / 3 } },
+      { x: 1, y: 1, handleIn: { x: 2 / 3, y: 2 / 3 }, handleOut: null }
+    ];
+    state.toneSelection = { type: "point", index: 0 };
+    rebuildToneLut();
+    updateToneSelectionUI();
+    renderToneHistogram();
+    queuePosterize();
   }
 
   function renderToneHistogram() {
@@ -969,8 +1158,8 @@
     context.closePath();
     context.fill();
 
-    const blackX = (state.toneBlack / 255) * width;
-    const whiteX = (state.toneWhite / 255) * width;
+    const blackX = toneGraphPoint({ x: state.toneBlack / 255, y: 0 }, width, height).x;
+    const whiteX = toneGraphPoint({ x: state.toneWhite / 255, y: 0 }, width, height).x;
     context.fillStyle = "rgba(243, 38, 18, .08)";
     context.fillRect(0, 0, blackX, height);
     context.fillRect(whiteX, 0, width - whiteX, height);
@@ -978,25 +1167,169 @@
     context.strokeStyle = "#f32612";
     context.lineWidth = 2;
     context.beginPath();
-    for (let i = 0; i < 256; i++) {
-      const x = (i / 255) * width;
-      const y = height - (mapToneValue(i) / 255) * height;
-      if (i === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
+    const points = state.tonePoints;
+    canvas.setAttribute("aria-label", `Editable Bézier tone curve with ${points.length} anchor points. Click to add, use arrow keys to move the selected point, and Delete to remove it.`);
+    const first = toneGraphPoint(points[0], width, height);
+    context.moveTo(first.x, first.y);
+    for (let index = 0; index < points.length - 1; index++) {
+      const start = points[index];
+      const end = points[index + 1];
+      const out = toneGraphPoint(start.handleOut || start, width, height);
+      const incoming = toneGraphPoint(end.handleIn || end, width, height);
+      const endPoint = toneGraphPoint(end, width, height);
+      context.bezierCurveTo(out.x, out.y, incoming.x, incoming.y, endPoint.x, endPoint.y);
     }
     context.stroke();
 
-    context.fillStyle = "#fff";
-    context.strokeStyle = "#f32612";
-    context.lineWidth = 2;
-    for (const value of [state.toneBlack, state.toneWhite]) {
-      const x = (value / 255) * width;
-      const y = height - (mapToneValue(value) / 255) * height;
+    const selection = state.toneSelection;
+    if (selection?.type === "point") {
+      const selected = points[selection.index];
+      const anchor = toneGraphPoint(selected, width, height);
+      context.strokeStyle = "rgba(243, 38, 18, .55)";
+      context.lineWidth = 1;
+      for (const handle of [selected.handleIn, selected.handleOut].filter(Boolean)) {
+        const handlePoint = toneGraphPoint(handle, width, height);
+        context.strokeStyle = "rgba(243, 38, 18, .55)";
+        context.beginPath();
+        context.moveTo(anchor.x, anchor.y);
+        context.lineTo(handlePoint.x, handlePoint.y);
+        context.stroke();
+        context.fillStyle = "#fff";
+        context.strokeStyle = "#f32612";
+        context.beginPath();
+        context.rect(handlePoint.x - 3.5, handlePoint.y - 3.5, 7, 7);
+        context.fill();
+        context.stroke();
+      }
+    }
+
+    for (let index = 0; index < points.length; index++) {
+      const point = toneGraphPoint(points[index], width, height);
+      const selected = selection?.type === "point" && selection.index === index;
+      context.fillStyle = selected ? "#f32612" : "#fff";
+      context.strokeStyle = "#f32612";
+      context.lineWidth = 2;
       context.beginPath();
-      context.arc(x, clamp(y, 6, height - 6), 5, 0, Math.PI * 2);
+      context.arc(point.x, point.y, selected ? 5.5 : 4, 0, Math.PI * 2);
       context.fill();
       context.stroke();
     }
+  }
+
+  function tonePointerPosition(event) {
+    const rect = els.toneCanvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  function hitToneTarget(event) {
+    const pointer = tonePointerPosition(event);
+    const selected = state.toneSelection;
+    if (selected?.type === "point") {
+      const point = state.tonePoints[selected.index];
+      for (const type of ["handleIn", "handleOut"]) {
+        if (!point[type]) continue;
+        const handle = toneGraphPoint(point[type], pointer.width, pointer.height);
+        if (Math.hypot(pointer.x - handle.x, pointer.y - handle.y) <= 9) return { type, index: selected.index };
+      }
+    }
+    for (let index = state.tonePoints.length - 1; index >= 0; index--) {
+      const point = toneGraphPoint(state.tonePoints[index], pointer.width, pointer.height);
+      if (Math.hypot(pointer.x - point.x, pointer.y - point.y) <= 10) return { type: "point", index };
+    }
+    return null;
+  }
+
+  function moveToneTarget(target, normalized) {
+    const points = state.tonePoints;
+    const point = points[target.index];
+    if (!point) return;
+    if (target.type === "point") {
+      const previous = points[target.index - 1];
+      const next = points[target.index + 1];
+      const nextX = target.index === 0
+        ? 0
+        : target.index === points.length - 1
+          ? 1
+          : clamp(normalized.x, previous.x + .01, next.x - .01);
+      const nextY = clamp(normalized.y, 0, 1);
+      const deltaX = nextX - point.x;
+      const deltaY = nextY - point.y;
+      point.x = nextX;
+      point.y = nextY;
+      if (point.handleIn) {
+        point.handleIn.x += deltaX;
+        point.handleIn.y += deltaY;
+      }
+      if (point.handleOut) {
+        point.handleOut.x += deltaX;
+        point.handleOut.y += deltaY;
+      }
+    } else if (target.type === "handleIn" && point.handleIn) {
+      point.handleIn.x = normalized.x;
+      point.handleIn.y = normalized.y;
+    } else if (target.type === "handleOut" && point.handleOut) {
+      point.handleOut.x = normalized.x;
+      point.handleOut.y = normalized.y;
+    }
+    normalizeToneHandles();
+    rebuildToneLut();
+    state.curveDirty = true;
+    renderToneHistogram();
+  }
+
+  function beginToneDrag(event) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const pointer = tonePointerPosition(event);
+    let target = hitToneTarget(event);
+    if (!target) {
+      const normalized = normalizedTonePoint(pointer.x, pointer.y, pointer.width, pointer.height);
+      target = { type: "point", index: addTonePoint(normalized.x, normalized.y) };
+      rebuildToneLut();
+      state.curveDirty = true;
+    }
+    state.toneSelection = { type: "point", index: target.index };
+    state.toneDrag = target;
+    els.toneCanvas.style.cursor = "grabbing";
+    updateToneSelectionUI();
+    els.toneCanvas.setPointerCapture(event.pointerId);
+    renderToneHistogram();
+  }
+
+  function continueToneDrag(event) {
+    if (!state.toneDrag) {
+      els.toneCanvas.style.cursor = hitToneTarget(event) ? "grab" : "crosshair";
+      return;
+    }
+    event.preventDefault();
+    const pointer = tonePointerPosition(event);
+    const normalized = normalizedTonePoint(pointer.x, pointer.y, pointer.width, pointer.height);
+    moveToneTarget(state.toneDrag, normalized);
+  }
+
+  function endToneDrag(event) {
+    if (!state.toneDrag) return;
+    if (els.toneCanvas.hasPointerCapture(event.pointerId)) els.toneCanvas.releasePointerCapture(event.pointerId);
+    state.toneDrag = null;
+    els.toneCanvas.style.cursor = "crosshair";
+    if (state.curveDirty) {
+      state.curveDirty = false;
+      queuePosterize();
+    }
+  }
+
+  function nudgeSelectedTonePoint(deltaX, deltaY) {
+    const selected = state.toneSelection;
+    if (!selected || selected.type !== "point") return;
+    const point = state.tonePoints[selected.index];
+    moveToneTarget(selected, { x: point.x + deltaX, y: point.y + deltaY });
+    state.curveDirty = false;
+    queuePosterize();
   }
 
   function setProgress(value, label) {
@@ -1148,6 +1481,7 @@
     for (let i = 0; i < pixelCount; i += step) {
       const p = i * 4;
       if (pixels[p + 3] < alphaCutoff) continue;
+      if (!luminanceIsAnalyzed(pixelLuminance(pixels, p))) continue;
       const mapped = applyToneCurve([pixels[p], pixels[p + 1], pixels[p + 2]]);
       const key = (mapped[0] << 16) | (mapped[1] << 8) | mapped[2];
       histogram.set(key, (histogram.get(key) || 0) + 1);
@@ -1293,7 +1627,8 @@
 
     for (let i = 0, p = 0; i < pixelCount; i++, p += 4) {
       const alpha = state.pixels[p + 3];
-      if (alpha >= state.alpha && palette.length) {
+      const analyzed = alpha >= state.alpha && luminanceIsAnalyzed(pixelLuminance(state.pixels, p));
+      if (analyzed && palette.length) {
         const source = applyToneCurve([state.pixels[p], state.pixels[p + 1], state.pixels[p + 2]]);
         let nearest = 0;
         let distance = Infinity;
@@ -1705,7 +2040,9 @@
   }
 
   function bindUI() {
-    [els.colors, els.alpha, els.smooth, els.blackPoint, els.gamma, els.whitePoint].forEach(setRangeFill);
+    [els.colors, els.alpha, els.smooth, els.blackPoint, els.whitePoint].forEach(setRangeFill);
+    rebuildToneLut();
+    updateToneSelectionUI();
     updateCalculationControl();
     window.addEventListener("resize", renderToneHistogram);
     els.fileInput.addEventListener("change", event => acceptFile(event.target.files[0]));
@@ -1746,27 +2083,52 @@
       queuePosterize();
     });
     els.blackPoint.addEventListener("input", () => {
-      state.toneBlack = Number(els.blackPoint.value);
+      state.toneBlack = Math.min(Number(els.blackPoint.value), state.toneWhite - 1);
+      els.blackPoint.value = state.toneBlack;
       els.blackValue.textContent = state.toneBlack;
       els.toneValue.textContent = `${state.toneBlack} — ${state.toneWhite}`;
       setRangeFill(els.blackPoint);
       renderToneHistogram();
       queuePosterize();
     });
-    els.gamma.addEventListener("input", () => {
-      state.toneGamma = Number(els.gamma.value) / 100;
-      els.gammaValue.textContent = state.toneGamma.toFixed(2);
-      setRangeFill(els.gamma);
-      renderToneHistogram();
-      queuePosterize();
-    });
     els.whitePoint.addEventListener("input", () => {
-      state.toneWhite = Number(els.whitePoint.value);
+      state.toneWhite = Math.max(Number(els.whitePoint.value), state.toneBlack + 1);
+      els.whitePoint.value = state.toneWhite;
       els.whiteValue.textContent = state.toneWhite;
       els.toneValue.textContent = `${state.toneBlack} — ${state.toneWhite}`;
       setRangeFill(els.whitePoint);
       renderToneHistogram();
       queuePosterize();
+    });
+    els.toneAdd.addEventListener("click", addTonePointInLargestGap);
+    els.toneRemove.addEventListener("click", removeSelectedTonePoint);
+    els.toneReset.addEventListener("click", resetToneCurve);
+    els.toneCanvas.addEventListener("pointerdown", beginToneDrag);
+    els.toneCanvas.addEventListener("pointermove", continueToneDrag);
+    els.toneCanvas.addEventListener("pointerup", endToneDrag);
+    els.toneCanvas.addEventListener("pointercancel", endToneDrag);
+    els.toneCanvas.addEventListener("keydown", event => {
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        removeSelectedTonePoint();
+        return;
+      }
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        addTonePointInLargestGap();
+        return;
+      }
+      const step = event.shiftKey ? .025 : .005;
+      const movement = {
+        ArrowLeft: [-step, 0],
+        ArrowRight: [step, 0],
+        ArrowUp: [0, step],
+        ArrowDown: [0, -step]
+      }[event.key];
+      if (movement) {
+        event.preventDefault();
+        nudgeSelectedTonePoint(movement[0], movement[1]);
+      }
     });
     els.recalculate.addEventListener("click", () => {
       if (!state.pixels || state.calculating) return;
