@@ -16,6 +16,9 @@
       --red: #f32612;
       --page: #fff;
       --black: #f32612;
+      --selected-surface: #fff6f4;
+      --selected-edge: #ffe9e5;
+      --selected-edge-active: #ffddd7;
     }
 
     * { box-sizing: border-box; }
@@ -628,6 +631,40 @@
       pointer-events: none;
     }
 
+    .split-divider {
+      display: none;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      margin-left: -1.5px;
+      background: var(--red);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .split-label {
+      display: none;
+      position: absolute;
+      bottom: 19px;
+      z-index: 2;
+      padding: 3px 7px;
+      background: rgba(255, 255, 255, .85);
+      color: var(--red);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 9px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .split-label-left { left: 22px; }
+    .split-label-right { left: calc(50% + 16px); }
+
+    #canvas-wrap.is-split-mode .split-divider,
+    #canvas-wrap.is-split-mode .split-label { display: block; }
+
     .status {
       position: absolute;
       z-index: 4;
@@ -681,8 +718,10 @@
       position: sticky;
       z-index: 12;
       top: 12px;
-      margin: 8px 0 2px;
-      padding: 7px 0;
+      display: flex;
+      justify-content: flex-end;
+      margin: 8px 0 4px;
+      padding: 5px 0;
       background: rgba(255, 255, 255, .96);
       backdrop-filter: blur(8px);
     }
@@ -690,35 +729,53 @@
     .palette-merge-bar[hidden] { display: none; }
 
     .palette-merge-button {
-      display: flex;
+      display: inline-grid;
+      grid-template-columns: auto minmax(30px, auto);
       align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      min-height: 38px;
-      padding: 0 12px;
+      width: auto;
+      min-height: 34px;
+      padding: 0;
       border: 1px solid var(--red);
-      background: #c91405;
-      color: #fff;
+      border-radius: 0;
+      background: #fff;
+      color: var(--red);
       cursor: pointer;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 9px;
       font-weight: 700;
       letter-spacing: .11em;
       text-transform: uppercase;
+      transition: background 120ms ease, color 120ms ease;
     }
 
-    .palette-merge-button:hover { background: #a91004; }
-    .palette-merge-button:disabled { cursor: wait; opacity: .55; }
+    .palette-merge-label {
+      display: flex;
+      min-height: 32px;
+      align-items: center;
+      padding: 0 11px;
+    }
+
+    .palette-merge-button:not(:disabled):hover .palette-merge-label { background: #fff2ef; }
+    .palette-merge-button:not(:disabled):active { background: var(--red); color: #fff; }
+    .palette-merge-button:not(:disabled):active .palette-merge-label { background: transparent; }
+    .palette-merge-button:disabled { cursor: wait; opacity: .42; }
+    .palette-merge-button:disabled .palette-merge-label { background: #fff; }
 
     .palette-merge-count {
       display: grid;
-      min-width: 19px;
-      height: 19px;
+      min-width: 30px;
+      min-height: 32px;
+      padding: 0 7px;
       place-items: center;
-      border: 1px solid rgba(255, 255, 255, .72);
-      border-radius: 999px;
+      border-left: 1px solid var(--red);
+      background: var(--red);
+      color: #fff;
       font-size: 8px;
+      letter-spacing: 0;
+      line-height: 1;
     }
+
+    .palette-merge-button:not(:disabled):active .palette-merge-count { background: #fff; color: var(--red); }
 
     .palette-guide {
       margin: 8px 0 0;
@@ -821,11 +878,42 @@
 
     .palette-output-unit { position: relative; }
 
+    .palette-output-unit:not(.palette-group-unit) {
+      padding: 2px;
+      outline: 1px dashed transparent;
+      outline-offset: -1px;
+    }
+
     .palette-output-unit:not(.palette-group-unit):is(:hover, :focus-within),
     .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"]) {
       z-index: 2;
-      outline: 1px dashed var(--red);
-      outline-offset: 1px;
+      outline-color: var(--red);
+    }
+
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"]) {
+      background: var(--selected-surface);
+    }
+
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+      > .palette-row-shell > :is(.palette-item, .palette-drag-handle) {
+      background: transparent;
+    }
+
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+      > .palette-transition {
+      background: var(--selected-edge);
+    }
+
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+      > .palette-transition > :is(.transition-toggle, .transition-panel) {
+      background: transparent;
+    }
+
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+      > .palette-transition > .transition-toggle:hover,
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+      > .palette-transition.is-open > .transition-toggle {
+      background: var(--selected-edge-active);
     }
 
     .palette-output-unit.is-dragging { opacity: .38; }
@@ -870,16 +958,6 @@
     }
 
     button.palette-item { cursor: pointer; }
-    button.palette-item:hover { background: #fff4f1; }
-
-    button.palette-item[aria-pressed="true"] {
-      background: #c91405;
-      color: #fff;
-    }
-
-    button.palette-item[aria-pressed="true"] .palette-hex,
-    button.palette-item[aria-pressed="true"] .palette-share { color: #fff; }
-    button.palette-item[aria-pressed="true"] .palette-swatch { border-color: #fff; }
 
     .palette-drag-handle {
       display: grid;
@@ -923,9 +1001,9 @@
       position: relative;
       display: block;
       width: 22px;
-      height: calc(var(--group-member-count, 2) * 30px);
-      min-height: 0;
-      align-self: start;
+      height: auto;
+      min-height: calc(var(--group-member-count, 2) * 30px);
+      align-self: stretch;
       border: 1px solid var(--red);
       background-color: transparent;
       background-image:
@@ -966,7 +1044,8 @@
     }
 
     .palette-group-actions .palette-drag-handle,
-    .palette-group-remove {
+    .palette-group-remove,
+    .palette-group-add {
       display: grid;
       width: 26px;
       height: 26px;
@@ -982,13 +1061,17 @@
 
     .palette-group-actions .palette-drag-handle { font-size: 10px; }
 
-    .palette-group-remove {
+    .palette-group-remove,
+    .palette-group-add {
       cursor: pointer;
       font-size: 15px;
     }
 
     .palette-group-actions .palette-drag-handle:hover,
-    .palette-group-remove:hover { background: var(--red); color: #fff; }
+    .palette-group-remove:hover,
+    .palette-group-add:not(:disabled):hover { background: var(--red); color: #fff; }
+
+    .palette-group-add:disabled { opacity: .35; cursor: not-allowed; }
 
     .palette-group-edge {
       grid-column: 1 / -1;
@@ -1356,7 +1439,7 @@
         <p class="palette-guide">Click layers to select · drag ⋮ to reorder</p>
         <div class="palette-merge-bar" id="palette-merge-bar" hidden>
           <button class="palette-merge-button" id="palette-merge" type="button">
-            <span>Merge</span><span class="palette-merge-count" id="palette-merge-count">2</span>
+            <span class="palette-merge-label">Merge selected</span><span class="palette-merge-count" id="palette-merge-count">2</span>
           </button>
         </div>
         <div class="palette" id="palette" role="list" aria-label="Extracted color layers"></div>
@@ -1372,6 +1455,7 @@
       <div class="workspace-bar">
         <div class="view-tabs" role="tablist" aria-label="Preview mode">
           <button class="view-tab" data-view="original" role="tab">Original</button>
+          <button class="view-tab" data-view="split" role="tab">Split</button>
           <button class="view-tab active" data-view="vector" role="tab" aria-selected="true">Posterized</button>
           <button class="view-tab" data-view="overlay" role="tab">Layers</button>
         </div>
@@ -1393,7 +1477,11 @@
           <button class="icon-button" id="reset-layers" type="button" aria-label="Return separated layers to their original positions" title="Reset layer positions">↺</button>
         </div>
       </div>
-      <div id="canvas-wrap" aria-label="Pannable p5.js preview canvas"></div>
+      <div id="canvas-wrap" aria-label="Pannable p5.js preview canvas">
+        <div class="split-divider" aria-hidden="true"></div>
+        <div class="split-label split-label-left" aria-hidden="true">Original</div>
+        <div class="split-label split-label-right" aria-hidden="true">Posterized</div>
+      </div>
       <p class="canvas-note" id="canvas-note">Scroll to zoom · drag to pan</p>
       <div class="status"><span class="status-dot"></span><span id="status-text">Local processing</span></div>
     </section>
@@ -1410,6 +1498,7 @@
   const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/pjpeg"]);
   const SUPPORTED_IMAGE_EXTENSION = /\.(?:png|jpe?g)$/i;
   const MAX_EDGE_EXPANSION = 32;
+  const MAX_IDENTITY_COLOR_DISTANCE = 12000;
 
   const state = {
     name: "example.png",
@@ -1455,7 +1544,6 @@
     offsetY: 0,
     dragging: false,
     activeLayer: null,
-    layerZ: 0,
     lastX: 0,
     lastY: 0,
     ready: false
@@ -2332,11 +2420,13 @@
       for (let previousIndex = 0; previousIndex < previousLayers.length; previousIndex++) {
         const nextLayer = nextLayers[nextIndex];
         const previousLayer = previousLayers[previousIndex];
+        const colorScore = colorDistance(nextLayer.rgb, previousLayer.rgb);
+        if (colorScore > MAX_IDENTITY_COLOR_DISTANCE) continue;
         const shareDifference = Math.abs(nextLayer.hardPixels / nextTotal - previousLayer.hardPixels / previousTotal);
         candidates.push({
           nextIndex,
           previousIndex,
-          score: colorDistance(nextLayer.rgb, previousLayer.rgb) + shareDifference * 4096
+          score: colorScore + shareDifference * 4096
         });
       }
     }
@@ -2602,11 +2692,8 @@
     if (!isCurrent()) { abandon(); return; }
     rebuildPosterCanvasFromLayers();
 
-    const nodeCount = state.layers.reduce((sum, layer) => sum + effectiveLoops(layer).reduce((n, loop) => n + loop.length, 0), 0);
-    visibleCount = effectiveVisiblePixelCount();
+    visibleCount = updateEffectiveGeometryStats();
     updateOutputLayerCount();
-    els.nodes.textContent = nodeCount.toLocaleString();
-    els.pixels.textContent = visibleCount.toLocaleString();
     const outputCount = getLayerUnits().length;
     els.status.textContent = `${outputCount} output layer${outputCount === 1 ? "" : "s"} · ${state.layers.length} color${state.layers.length === 1 ? "" : "s"}`;
     state.calculating = false;
@@ -2902,7 +2989,11 @@
         state.expandedEdges.delete(edge.key);
       }
     });
-    if (open) requestAnimationFrame(() => drawEdgePreview(canvas, layer, edge));
+    wrapper.refreshEdgePreview = () => {
+      previewShell.style.setProperty("--edge-color", layer.hex);
+      if (!panel.hidden) drawEdgePreview(canvas, layer, edge);
+    };
+    if (open) requestAnimationFrame(wrapper.refreshEdgePreview);
     return wrapper;
   }
 
@@ -2964,6 +3055,15 @@
 
   function effectivePath(layer) {
     return validLayerGroup(layer) && layer.groupPath !== undefined ? layer.groupPath : layer.path;
+  }
+
+  function mergedUnitPath(unit) {
+    const unionMask = new Uint8Array(state.width * state.height);
+    for (const layer of unit.layers) {
+      for (let i = 0; i < unionMask.length; i++) if (layer.mask[i]) unionMask[i] = 1;
+    }
+    const loops = traceMask(unionMask, state.width, state.height);
+    return loops.map(loop => loopToPath(loop, state.smooth)).join("");
   }
 
   function clearLayerGroupGeometry(layer) {
@@ -3088,6 +3188,17 @@
     return visible.reduce((sum, value) => sum + value, 0);
   }
 
+  function updateEffectiveGeometryStats() {
+    const nodeCount = state.layers.reduce(
+      (sum, layer) => sum + effectiveLoops(layer).reduce((count, loop) => count + loop.length, 0),
+      0
+    );
+    const visibleCount = effectiveVisiblePixelCount();
+    els.nodes.textContent = nodeCount.toLocaleString();
+    els.pixels.textContent = visibleCount.toLocaleString();
+    return visibleCount;
+  }
+
   function reconcileLayerOrganization() {
     const existingIds = new Set(state.layers.map(layerId));
     for (const selectedId of Array.from(state.selectedLayerIds)) {
@@ -3142,6 +3253,13 @@
     els.paletteMergeBar.hidden = count < 2;
     els.paletteMergeCount.textContent = String(count);
     els.paletteMerge.setAttribute("aria-label", `Merge ${count} selected layer${count === 1 ? "" : "s"}`);
+    const canAddToGroup = count === 1;
+    els.palette.querySelectorAll(".palette-group-add").forEach(button => {
+      button.disabled = !canAddToGroup;
+      button.setAttribute("aria-label", canAddToGroup
+        ? "Add selected color to this merged layer"
+        : "Select exactly one color to add it to this merged layer");
+    });
   }
 
   function toggleLayerSelection(layer, item) {
@@ -3364,6 +3482,33 @@
     });
   }
 
+  function addLayerToGroup(groupId) {
+    if (state.calculating) return;
+    const group = state.layerGroups.get(groupId);
+    if (!group) return;
+    const selectedLayers = state.layers.filter(layer => !layer.groupId && state.selectedLayerIds.has(layerId(layer)));
+    if (selectedLayers.length !== 1) return;
+    const [layer] = selectedLayers;
+    const id = layerId(layer);
+    const remaining = state.layers.filter(candidate => layerId(candidate) !== id);
+    const firstMemberIndex = remaining.findIndex(candidate => candidate.groupId === groupId);
+    layer.groupId = groupId;
+    remaining.splice(firstMemberIndex + 1, 0, layer);
+    state.layers = remaining;
+    state.selectedLayerIds.clear();
+    normalizeLayerStack();
+    renderPalette();
+    updateOutputLayerCount();
+    const message = `${layer.name} added to merged layer`;
+    els.status.textContent = message;
+    toast(message);
+    requestAnimationFrame(() => {
+      const add = Array.from(els.palette.querySelectorAll(".palette-group-add"))
+        .find(button => button.dataset.groupId === groupId);
+      add?.focus({ preventScroll: true });
+    });
+  }
+
   function unmergeLayerGroup(groupId) {
     if (state.calculating || !state.layerGroups.has(groupId)) return;
     const members = state.layers.filter(layer => layer.groupId === groupId);
@@ -3375,6 +3520,7 @@
     removeGroupEdge(groupId);
     state.layerGroups.delete(groupId);
     refreshLayerRendering();
+    updateEffectiveGeometryStats();
     renderPalette();
     updateOutputLayerCount();
     const message = `${members.length} colors returned to separate layers`;
@@ -3416,7 +3562,7 @@
     return item;
   }
 
-  function createGroupColorControl(unit) {
+  function createGroupColorControl(unit, edgeTarget, refreshEdgePreview) {
     const group = unit.group;
     const label = document.createElement("label");
     label.className = `palette-group-color${group.representativeHex ? " has-color" : ""}`;
@@ -3427,17 +3573,26 @@
     const input = document.createElement("input");
     input.type = "color";
     input.value = group.representativeHex || unit.layers[0].hex;
-    input.setAttribute("aria-label", `Choose representative color for merged layer of ${unit.layers.length} colors`);
+    const updateAccessibleName = () => input.setAttribute(
+      "aria-label",
+      group.representativeHex
+        ? `Representative color for merged layer of ${unit.layers.length} colors: ${group.representativeHex}`
+        : `Choose representative color for merged layer of ${unit.layers.length} colors; currently transparent and not set`
+    );
+    updateAccessibleName();
     input.addEventListener("input", () => {
       group.representativeHex = input.value.toUpperCase();
       label.classList.add("has-color");
       label.style.backgroundColor = group.representativeHex;
       label.title = `Representative color ${group.representativeHex}`;
+      edgeTarget.hex = group.representativeHex;
+      edgeTarget.rgb = hexToRgb(group.representativeHex);
+      updateAccessibleName();
       refreshLayerRendering();
+      refreshEdgePreview();
     });
     input.addEventListener("change", () => {
       toast(`${group.representativeHex} set as representative color`);
-      renderPalette();
     });
     label.append(input);
     return label;
@@ -3520,6 +3675,13 @@
         handle.className = "palette-drag-handle";
         handle.textContent = "⋮";
         bindReorderHandle(handle, unit, `merged layer of ${unit.layers.length} colors`);
+        const add = document.createElement("button");
+        add.className = "palette-group-add";
+        add.type = "button";
+        add.textContent = "+";
+        add.dataset.groupId = unit.group.id;
+        add.title = "Add selected color to this merged layer";
+        add.addEventListener("click", () => addLayerToGroup(unit.group.id));
         const remove = document.createElement("button");
         remove.className = "palette-group-remove";
         remove.type = "button";
@@ -3528,11 +3690,18 @@
         remove.setAttribute("aria-label", `Remove merged state from ${unit.layers.length} colors`);
         remove.title = "Remove merged state";
         remove.addEventListener("click", () => unmergeLayerGroup(unit.group.id));
-        actions.append(handle, remove);
+        actions.append(handle, add, remove);
         const groupEdge = document.createElement("div");
         groupEdge.className = "palette-group-edge";
-        groupEdge.append(createEdgeElement(getGroupEdgeTarget(unit), `group-${unit.group.id}`));
-        groupFrame.append(createGroupColorControl(unit), members, actions, groupEdge);
+        const groupEdgeTarget = getGroupEdgeTarget(unit);
+        const groupEdgeElement = createEdgeElement(groupEdgeTarget, `group-${unit.group.id}`);
+        groupEdge.append(groupEdgeElement);
+        const colorControl = createGroupColorControl(
+          unit,
+          groupEdgeTarget,
+          () => groupEdgeElement.refreshEdgePreview?.()
+        );
+        groupFrame.append(colorControl, actions, members, groupEdge);
         unitElement.append(groupFrame);
       }
       els.palette.append(unitElement);
@@ -3555,9 +3724,12 @@
 
   function makeMergedLayerSVG(unit) {
     const representative = unit.group.representativeHex || "transparent";
-    const paths = unit.layers.map(layer =>
-      `    <path id="${slugify(layer.name)}" data-color-name="${escapeXML(layer.name)}" data-original-color="${layer.hex}" d="${effectivePath(layer)}" fill="${layerRenderHex(layer)}" fill-rule="evenodd"/>`
-    ).join("\n");
+    const mergedColorNames = unit.layers.map(layer => layer.name).join(", ");
+    const paths = unit.group.representativeHex
+      ? `    <path id="${slugify(unit.group.id)}-shape" data-merged-colors="${escapeXML(mergedColorNames)}" d="${mergedUnitPath(unit)}" fill="${unit.group.representativeHex}" fill-rule="evenodd"/>`
+      : unit.layers.map(layer =>
+          `    <path id="${slugify(layer.name)}" data-color-name="${escapeXML(layer.name)}" data-original-color="${layer.hex}" d="${effectivePath(layer)}" fill="${layerRenderHex(layer)}" fill-rule="evenodd"/>`
+        ).join("\n");
     return `<?xml version="1.0" encoding="UTF-8"?>\n` +
       `<svg xmlns="http://www.w3.org/2000/svg" width="${state.width}" height="${state.height}" viewBox="0 0 ${state.width} ${state.height}">\n` +
       `  <title>Merged layer — ${unit.layers.length} colors</title>\n` +
@@ -3577,9 +3749,12 @@
         return `  <path id="${slugify(layer.name)}" data-color-name="${escapeXML(layer.name)}" d="${effectivePath(layer)}" fill="${layerRenderHex(layer)}" fill-rule="evenodd"/>`;
       }
       const representative = unit.group.representativeHex || "transparent";
-      const members = unit.layers.map(layer =>
-        `    <path id="${slugify(layer.name)}" data-color-name="${escapeXML(layer.name)}" data-original-color="${layer.hex}" d="${effectivePath(layer)}" fill="${layerRenderHex(layer)}" fill-rule="evenodd"/>`
-      ).join("\n");
+      const mergedColorNames = unit.layers.map(layer => layer.name).join(", ");
+      const members = unit.group.representativeHex
+        ? `    <path id="${slugify(unit.group.id)}-shape" data-merged-colors="${escapeXML(mergedColorNames)}" d="${mergedUnitPath(unit)}" fill="${unit.group.representativeHex}" fill-rule="evenodd"/>`
+        : unit.layers.map(layer =>
+            `    <path id="${slugify(layer.name)}" data-color-name="${escapeXML(layer.name)}" data-original-color="${layer.hex}" d="${effectivePath(layer)}" fill="${layerRenderHex(layer)}" fill-rule="evenodd"/>`
+          ).join("\n");
       return `  <g id="${slugify(unit.group.id)}" data-layer-type="merged" data-representative-color="${representative}">\n${members}\n  </g>`;
     }).join("\n");
     return `<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -3949,6 +4124,7 @@
       });
       const layerMode = state.view === "overlay";
       els.wrap.classList.toggle("is-layer-mode", layerMode);
+      els.wrap.classList.toggle("is-split-mode", state.view === "split");
       els.note.textContent = layerMode
         ? "Drag a color or merged shape to separate it · drag empty space to pan"
         : "Scroll to zoom · drag to pan";
@@ -3963,10 +4139,11 @@
   }
 
   function resetLayerPositions() {
-    for (const layer of state.layers) {
+    state.layers.forEach((layer, index) => {
       layer.dragX = 0;
       layer.dragY = 0;
-    }
+      layer.z = index;
+    });
     state.activeLayer = null;
     const outputCount = getLayerUnits().length;
     els.status.textContent = `${outputCount} output layer${outputCount === 1 ? "" : "s"}`;
@@ -4022,6 +4199,10 @@
         if (!state.ready || !state.image) return;
         const x = state.offsetX - (state.width * state.scale) / 2;
         const y = state.offsetY - (state.height * state.scale) / 2;
+        if (state.view === "split") {
+          drawSplitView(p, x, y);
+          return;
+        }
         p.push();
         p.translate(x, y);
         p.scale(state.scale);
@@ -4042,9 +4223,7 @@
         const hit = layerAtPoint(p);
         if (hit) {
           const layers = dragLayersFor(hit);
-          const maxZ = Math.max(0, ...state.layers.map(layer => layer.z || 0));
-          layers.forEach((layer, index) => { layer.z = maxZ + index + 1; });
-          state.activeLayer = { hit, layers };
+          state.activeLayer = { hit, layers, raised: false, moved: 0 };
           state.lastX = p.mouseX;
           state.lastY = p.mouseY;
           els.wrap.classList.add("is-dragging-layer");
@@ -4059,8 +4238,21 @@
       };
       p.mouseDragged = () => {
         if (state.activeLayer) {
-          const dx = (p.mouseX - state.lastX) / state.scale;
-          const dy = (p.mouseY - state.lastY) / state.scale;
+          const pixelDx = p.mouseX - state.lastX;
+          const pixelDy = p.mouseY - state.lastY;
+          state.activeLayer.moved += Math.hypot(pixelDx, pixelDy);
+          if (!state.activeLayer.raised && state.activeLayer.moved < 3) {
+            state.lastX = p.mouseX;
+            state.lastY = p.mouseY;
+            return;
+          }
+          if (!state.activeLayer.raised) {
+            const maxZ = Math.max(0, ...state.layers.map(layer => layer.z || 0));
+            state.activeLayer.layers.forEach((layer, index) => { layer.z = maxZ + index + 1; });
+            state.activeLayer.raised = true;
+          }
+          const dx = pixelDx / state.scale;
+          const dy = pixelDy / state.scale;
           for (const layer of state.activeLayer.layers) {
             layer.dragX += dx;
             layer.dragY += dy;
@@ -4113,6 +4305,29 @@
         p.rect(x, y, size, size);
       }
     }
+  }
+
+  function drawSplitView(p, x, y) {
+    const ctx = p.drawingContext;
+    const midX = p.width / 2;
+    const posterSource = state.posterCanvas || state.image;
+    const w = state.width * state.scale;
+    const h = state.height * state.scale;
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, midX, p.height);
+    ctx.clip();
+    ctx.drawImage(state.image, x, y, w, h);
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(midX, 0, p.width - midX, p.height);
+    ctx.clip();
+    ctx.drawImage(posterSource, x, y, w, h);
+    ctx.restore();
   }
 
   function drawLayer(p, layer) {
