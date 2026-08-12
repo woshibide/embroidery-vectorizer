@@ -1,4 +1,6 @@
-# Raster to layered SVG
+# IMAGE TRACE 2000
+
+> its like in illustrator, but better 
 
 Drop a PNG, JPG, or JPEG into the page to posterize it and export named SVG color layers. The default preview is loaded from `src/assets/example.png`.
 

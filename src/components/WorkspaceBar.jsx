@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../store/useAppStore.js";
 import { posterize, cancelScheduledPosterize, scheduleSemiPosterize } from "../lib/posterize.js";
 import { fitArtwork, zoomBy } from "../canvas/engine.js";
@@ -49,6 +50,15 @@ function CalculationControl() {
   const isDirty = calculationMode === "manual" && dirty && !calculating;
   const isPressed = calculationMode !== "auto" && calculating;
 
+  // Bumping the token on every calculating true -> false edge re-keys the fill,
+  // which remounts it and replays the flicker burst on each finished run.
+  const [finishToken, setFinishToken] = useState(0);
+  const wasCalculating = useRef(false);
+  useEffect(() => {
+    if (wasCalculating.current && !calculating) setFinishToken(token => token + 1);
+    wasCalculating.current = calculating;
+  }, [calculating]);
+
   return (
     <div className="calculation-control" id="calculation-control">
       <button
@@ -68,7 +78,12 @@ function CalculationControl() {
       <div className="progress-control" id="progress-control" aria-live="polite">
         <span className="progress-label" id="progress-label">{progressLabel}</span>
         <div className="progress-track" role="progressbar" aria-label="Posterization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progressValue)}>
-          <div className="progress-fill" id="progress-fill" style={{ "--progress": `${clampPercent(progressValue)}%` }} />
+          <div
+            key={finishToken}
+            className={`progress-fill${finishToken ? " flicker-burst" : ""}`}
+            id="progress-fill"
+            style={{ "--progress": `${clampPercent(progressValue)}%` }}
+          />
         </div>
       </div>
       <button

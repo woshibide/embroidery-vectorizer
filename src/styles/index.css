@@ -10,9 +10,36 @@
       --selected-surface: #fff6f4;
       --selected-edge: #ffe9e5;
       --selected-edge-active: #ffddd7;
+      --flicker-duration: 480ms;
     }
 
     * { box-sizing: border-box; }
+
+    /* ---------------------------------------------------------------------
+       Flicker burst — the app's single "that just landed" motion.
+       A hard on/off strobe (never a fade) whose flips accelerate towards the
+       end, then snap to solid. Every flicker in the app runs through this one
+       keyframe set: retime them all from --flicker-duration above, reshape
+       them all by editing the stops below.
+       Apply with class .flicker-burst; to replay it, re-key the element so it
+       remounts (React) or remove/re-add the class on the next frame.
+       --------------------------------------------------------------------- */
+    @keyframes flicker-burst {
+      0%    { opacity: 1; }
+      16%   { opacity: 0; }
+      30%   { opacity: 1; }
+      42%   { opacity: 0; }
+      52%   { opacity: 1; }
+      76%   { opacity: 0; }
+      100%  { opacity: 1; }
+    }
+
+    /* steps(1, end) holds each stop flat, so the transitions read as cuts. */
+    .flicker-burst { animation: flicker-burst var(--flicker-duration) steps(1, end) 1 both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flicker-burst { animation: none; }
+    }
 
     html, body {
       width: 100%;
@@ -258,7 +285,7 @@
       height: 9px !important;
       background:
         linear-gradient(var(--red), var(--red)) right center / 1px 9px no-repeat,
-        repeating-linear-gradient(to right, var(--red) 0 1px, transparent 1px 6.666667%) center / 100% 9px no-repeat,
+        repeating-linear-gradient(to right, var(--red) 0 1px, transparent 1px var(--tick, 6.666667%)) center / 100% 9px no-repeat,
         linear-gradient(to right, var(--red) var(--fill, 50%), #ffc6bd var(--fill, 50%)) center / 100% 2px no-repeat !important;
     }
 
@@ -471,7 +498,7 @@
     .progress-control {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       gap: 4px;
       min-width: 0;
       width: 100%;
@@ -541,7 +568,7 @@
     .recalculate-button:not(.is-counting):not(.is-triggering):hover,
     .recalculate-button.is-dirty,
     .recalculate-button.is-pressed { background: var(--red); color: #fff; }
-    .recalculate-button.is-triggering { animation: semi-auto-flicker 180ms steps(2, end); }
+    .recalculate-button.is-triggering { animation: semi-auto-flicker 80ms steps(2, end); }
     .recalculate-button:disabled { cursor: wait; }
 
     @keyframes semi-auto-countdown {
@@ -876,6 +903,21 @@
     }
 
     .color-tooltip[hidden] { display: none; }
+
+    /* The hex stays in flow as the sizer so swapping in "Copied" — which is
+       painted on top of it — can never change the tooltip's width. */
+    .color-tooltip-slot { position: relative; display: block; }
+
+    .color-tooltip-copied {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      text-transform: uppercase;
+    }
+
+    .color-tooltip-copied[hidden] { display: none; }
 
     .palette-output-unit { position: relative; }
 
@@ -1216,6 +1258,7 @@
       background: #fff;
       cursor: ns-resize;
       opacity: 0;
+      touch-action: none;
       transform: translateY(-50%);
       transition: opacity 120ms ease;
     }

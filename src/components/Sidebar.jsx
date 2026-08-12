@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAppStore } from "../store/useAppStore.js";
+import { useAppStore, MAX_PALETTE_COUNT } from "../store/useAppStore.js";
 import { acceptFile, queuePosterize } from "../lib/posterize.js";
 import ToneCurve from "./ToneCurve.jsx";
 import PaletteSection from "./PaletteSection.jsx";
@@ -84,18 +84,19 @@ function PosterizeSlider() {
         id="luma"
         type="range"
         min="1"
-        max="16"
+        max={MAX_PALETTE_COUNT}
         step="1"
         value={paletteCount}
         list="posterize-values"
-        style={fillStyle(paletteCount, 1, 16)}
+        // --tick drives the notch spacing of .posterize-range's repeating gradient.
+        style={{ ...fillStyle(paletteCount, 1, MAX_PALETTE_COUNT), "--tick": `${100 / (MAX_PALETTE_COUNT - 1)}%` }}
         onChange={event => {
           useAppStore.getState().setPaletteCount(Number(event.target.value));
           queuePosterize();
         }}
       />
       <datalist id="posterize-values">
-        {Array.from({ length: 16 }, (_, i) => <option key={i} value={i + 1} />)}
+        {Array.from({ length: MAX_PALETTE_COUNT }, (_, i) => <option key={i} value={i + 1} />)}
       </datalist>
       <p className="hint">Choose how many extracted colors become separate vector layers.</p>
     </div>

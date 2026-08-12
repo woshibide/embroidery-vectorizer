@@ -3,6 +3,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { buildToneLut, computeHistogram } from "../lib/tone.js";
 
 export const MAX_EDGE_EXPANSION = 32;
+export const MAX_PALETTE_COUNT = 32;
 
 const DEFAULT_TONE_POINTS = [
   { x: 0, y: 0, handleIn: null, handleOut: { x: 1 / 3, y: 1 / 3 } },
@@ -113,9 +114,14 @@ export const useAppStore = create(subscribeWithSelector((set, get) => ({
 
   showToast: message => set(state => ({ toastMessage: message, toastToken: state.toastToken + 1 })),
 
-  showColorTooltip: (hex, clientX, clientY) => set({ colorTooltip: { hex, clientX, clientY } }),
+  showColorTooltip: (hex, clientX, clientY) => set({ colorTooltip: { hex, clientX, clientY, copied: false, copyToken: 0 } }),
   moveColorTooltip: (clientX, clientY) => set(state => state.colorTooltip ? ({ colorTooltip: { ...state.colorTooltip, clientX, clientY } }) : {}),
   hideColorTooltip: () => set({ colorTooltip: null }),
+  // Sticky until the pointer leaves the swatch (which hides the tooltip and so
+  // clears this); copyToken bumps per click so a repeat copy replays the flicker.
+  markColorTooltipCopied: () => set(state => state.colorTooltip
+    ? ({ colorTooltip: { ...state.colorTooltip, copied: true, copyToken: state.colorTooltip.copyToken + 1 } })
+    : {}),
 
   setTonePoints: tonePoints => set({ tonePoints, toneLut: buildToneLut(tonePoints) }),
   setToneSelection: toneSelection => set({ toneSelection }),

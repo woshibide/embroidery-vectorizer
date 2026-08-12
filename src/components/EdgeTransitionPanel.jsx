@@ -62,6 +62,7 @@ function drawEdgePreview(canvas, layerRgb, edge) {
 // getGroupEdgeTarget — both have {hex, rgb, edgeKey?, edgeLabel?, edgeSubject?, name}.
 export default function EdgeTransitionPanel({ target, panelIndex, onChanged }) {
   const canvasRef = useRef(null);
+  const previewRef = useRef(null);
   const expandedEdges = useAppStore(state => state.expandedEdges);
   const edgesVersion = useAppStore(state => state.edges);
   const edge = peekEdge(target);
@@ -100,17 +101,25 @@ export default function EdgeTransitionPanel({ target, panelIndex, onChanged }) {
     onChanged?.();
   };
 
+  // The handles live inside the side rails, which are *siblings* of the preview
+  // in the grid shell — so the drag geometry has to come from a ref, never from
+  // a `closest(".transition-preview")` walk up the ancestor chain.
+  const setFromPointer = (kind, event) => {
+    const preview = previewRef.current;
+    if (!preview) return;
+    const rect = preview.getBoundingClientRect();
+    setFromTop(kind, ((event.clientY - rect.top) / rect.height) * 100);
+  };
+
   const makeHandleHandlers = kind => ({
     onPointerDown: event => {
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
-      const rect = event.currentTarget.closest(".transition-preview").getBoundingClientRect();
-      setFromTop(kind, ((event.clientY - rect.top) / rect.height) * 100);
+      setFromPointer(kind, event);
     },
     onPointerMove: event => {
       if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-      const rect = event.currentTarget.closest(".transition-preview").getBoundingClientRect();
-      setFromTop(kind, ((event.clientY - rect.top) / rect.height) * 100);
+      setFromPointer(kind, event);
     },
     onKeyDown: event => {
       if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
@@ -153,7 +162,10 @@ export default function EdgeTransitionPanel({ target, panelIndex, onChanged }) {
                   setEdge(target, { mode: value });
                   queuePosterize();
                   onChanged?.();
-                  requestAnimationFrame(redrawPreview);
+                  // No manual redraw here: `redrawPreview` closes over the
+                  // pre-change `edge`, so a queued rAF would repaint the old
+                  // mode on top of the effect's correct one. The effect below
+                  // already redraws on every edge.mode change.
                 }}
               />
               <span>{labelText}</span>
@@ -175,7 +187,7 @@ export default function EdgeTransitionPanel({ target, panelIndex, onChanged }) {
               {...makeHandleHandlers("color")}
             />
           </div>
-          <div className="transition-preview edge-preview">
+          <div className="transition-preview edge-preview" ref={previewRef}>
             <canvas ref={canvasRef} aria-label={`Macro preview of ${edgeSubject} fading into white space`} />
             <span className="edge-guide edge-guide-color" style={{ top: `${colorTop}%` }} />
             <span className="edge-guide edge-guide-white" style={{ top: `${whiteTop}%` }} />

@@ -43,13 +43,18 @@ function ColorSwatchButton({ className, style, layer, share }) {
       onPointerMove={event => useAppStore.getState().moveColorTooltip?.(event.clientX, event.clientY)}
       onPointerLeave={() => useAppStore.getState().hideColorTooltip?.()}
       onFocus={event => {
+        // Keyboard focus only. A mouse press also focuses the swatch, and
+        // re-anchoring the tooltip to the element's top edge mid-click is what
+        // made it jump away from the cursor.
+        if (!event.target.matches(":focus-visible")) return;
         const rect = event.target.getBoundingClientRect();
         useAppStore.getState().showColorTooltip?.(layer.hex, rect.left + rect.width / 2, rect.top);
       }}
       onBlur={() => useAppStore.getState().hideColorTooltip?.()}
       onClick={async () => {
         await copyHex(layer.hex);
-        useAppStore.getState().hideColorTooltip?.();
+        // Tooltip stays put and reads "Copied" until the pointer leaves.
+        useAppStore.getState().markColorTooltipCopied?.();
         useAppStore.getState().showToast(`${layer.hex} copied`);
       }}
     />
