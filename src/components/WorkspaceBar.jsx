@@ -1,6 +1,6 @@
 import { useAppStore } from "../store/useAppStore.js";
 import { posterize, cancelScheduledPosterize, scheduleSemiPosterize } from "../lib/posterize.js";
-import { fitArtwork, zoomBy, zoomReadoutLabel } from "../canvas/engine.js";
+import { fitArtwork, zoomBy } from "../canvas/engine.js";
 import { getLayerUnits } from "../lib/layers.js";
 import { IconZoomIn, IconZoomOut, IconFit, IconReset } from "./icons.jsx";
 
@@ -66,10 +66,10 @@ function CalculationControl() {
         <span>Recalculate</span>
       </button>
       <div className="progress-control" id="progress-control" aria-live="polite">
+        <span className="progress-label" id="progress-label">{progressLabel}</span>
         <div className="progress-track" role="progressbar" aria-label="Posterization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progressValue)}>
           <div className="progress-fill" id="progress-fill" style={{ "--progress": `${clampPercent(progressValue)}%` }} />
         </div>
-        <span className="progress-label" id="progress-label">{progressLabel}</span>
       </div>
       <button
         className="auto-toggle"
@@ -104,12 +104,9 @@ function clampPercent(value) {
 }
 
 function CanvasActions({ sketchRef }) {
-  const scale = useAppStore(state => state.scale);
-  const fitScale = useAppStore(state => state.fitScale);
   return (
     <div className="canvas-actions">
       <button className="icon-button" id="zoom-out" type="button" aria-label="Zoom out" onClick={() => zoomBy(sketchRef.current, .8)}><IconZoomOut /></button>
-      <span className="zoom-readout" id="zoom-readout">{zoomReadoutLabel(scale, fitScale)}</span>
       <button className="icon-button" id="zoom-in" type="button" aria-label="Zoom in" onClick={() => zoomBy(sketchRef.current, 1.25)}><IconZoomIn /></button>
       <button className="icon-button" id="fit" type="button" aria-label="Fit artwork to screen" title="Fit to screen" onClick={() => fitArtwork(sketchRef.current)}><IconFit /></button>
       <button

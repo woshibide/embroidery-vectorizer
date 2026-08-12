@@ -459,7 +459,7 @@
 
     .calculation-control {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
       gap: 10px;
       min-width: 0;
@@ -469,10 +469,10 @@
     }
 
     .progress-control {
-      display: grid;
-      grid-template-columns: minmax(78px, 1fr) auto;
-      align-items: center;
-      gap: 9px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
       min-width: 0;
       width: 100%;
     }
@@ -493,12 +493,11 @@
     }
 
     .progress-label {
-      min-width: 64px;
       color: var(--red);
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 8px;
       letter-spacing: .07em;
-      text-align: right;
+      text-align: left;
       text-transform: uppercase;
       white-space: nowrap;
     }
@@ -657,7 +656,7 @@
       pointer-events: none;
     }
 
-    .split-label-left { left: 22px; }
+    .split-label-left { right: calc(50% + 16px); }
     .split-label-right { left: calc(50% + 16px); }
 
     .status {
