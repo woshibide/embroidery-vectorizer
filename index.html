@@ -242,22 +242,30 @@
     }
 
     input[type="range"]::-webkit-slider-thumb {
-      width: 13px;
-      height: 13px;
+      width: 3px;
+      height: 15px;
       appearance: none;
-      border: 2px solid #fff;
-      border-radius: 50%;
+      border: 0;
+      border-radius: 0;
       background: var(--red);
-      box-shadow: 0 0 0 1px var(--red);
+      box-shadow: 0 0 0 2px #fff;
     }
 
     input[type="range"]::-moz-range-thumb {
-      width: 10px;
-      height: 10px;
-      border: 2px solid #fff;
-      border-radius: 50%;
+      width: 3px;
+      height: 15px;
+      border: 0;
+      border-radius: 0;
       background: var(--red);
-      box-shadow: 0 0 0 1px var(--red);
+      box-shadow: 0 0 0 2px #fff;
+    }
+
+    .posterize-range {
+      height: 9px !important;
+      background:
+        linear-gradient(var(--red), var(--red)) right center / 1px 9px no-repeat,
+        repeating-linear-gradient(to right, var(--red) 0 1px, transparent 1px 6.666667%) center / 100% 9px no-repeat,
+        linear-gradient(to right, var(--red) var(--fill, 50%), #ffc6bd var(--fill, 50%)) center / 100% 2px no-repeat !important;
     }
 
     .hint {
@@ -346,7 +354,7 @@
     }
 
     .tone-slider input[type="range"] { height: 1px; }
-    .tone-slider input[type="range"]::-webkit-slider-thumb { width: 10px; height: 10px; }
+    .tone-slider input[type="range"]::-webkit-slider-thumb { width: 3px; height: 12px; }
 
     .stats {
       display: grid;
@@ -638,11 +646,9 @@
 
     .palette {
       display: grid;
-      gap: 7px;
-      max-height: 168px;
+      gap: 0;
       margin-top: 14px;
-      overflow-y: auto;
-      scrollbar-width: thin;
+      overflow: visible;
     }
 
     .palette-visual-row {
@@ -747,6 +753,221 @@
       text-transform: uppercase;
     }
 
+    .palette-transition {
+      position: relative;
+      margin: -1px 0 0;
+      border-bottom: 1px solid #ffd0c9;
+    }
+
+    .transition-toggle {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 18px;
+      align-items: center;
+      gap: 7px;
+      width: 100%;
+      min-height: 25px;
+      padding: 0;
+      border: 0;
+      background: #fff;
+      color: var(--red);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .transition-toggle:hover,
+    .palette-transition.is-open > .transition-toggle { background: #fff4f1; }
+
+    .transition-title,
+    .transition-state,
+    .transition-disclosure,
+    .transition-limit-label,
+    .transition-limit-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-transform: uppercase;
+    }
+
+    .transition-title { padding-left: 33px; font-size: 8px; letter-spacing: .1em; }
+    .transition-state { margin-left: 7px; color: var(--muted); font-size: 7px; letter-spacing: .07em; }
+    .transition-disclosure { font-size: 12px; text-align: center; }
+
+    .transition-panel {
+      padding: 9px 8px 11px;
+      border-top: 1px solid #ffd0c9;
+      background: #fff8f6;
+    }
+
+    .transition-method {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 9px;
+      border: 1px solid var(--red);
+    }
+
+    .transition-method label { position: relative; }
+    .transition-method label + label { border-left: 1px solid var(--red); }
+    .transition-method input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .transition-method span {
+      display: grid;
+      place-items: center;
+      min-height: 28px;
+      background: #fff;
+      color: var(--red);
+      cursor: pointer;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .transition-method input:checked + span { background: var(--red); color: #fff; }
+    .transition-method input:focus-visible + span { outline: 2px solid var(--red); outline-offset: 3px; }
+
+    .transition-preview {
+      position: relative;
+      height: 72px;
+      margin-bottom: 10px;
+      border: 1px solid var(--red);
+      background-color: #fff;
+      background-image:
+        linear-gradient(45deg, #ffd9d3 25%, transparent 25%),
+        linear-gradient(-45deg, #ffd9d3 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ffd9d3 75%),
+        linear-gradient(-45deg, transparent 75%, #ffd9d3 75%);
+      background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+      background-size: 10px 10px;
+      overflow: hidden;
+    }
+
+    .transition-preview canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+    .edge-preview-shell {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) 22px;
+      align-items: stretch;
+      margin-bottom: 10px;
+    }
+
+    .edge-preview { margin: 0; }
+
+    .edge-rail {
+      position: relative;
+      height: 72px;
+      touch-action: none;
+    }
+
+    .edge-rail::after {
+      position: absolute;
+      top: 50%;
+      color: var(--muted);
+      content: attr(data-label);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 6px;
+      letter-spacing: .08em;
+      opacity: 0;
+      text-transform: uppercase;
+      transform: translateY(-50%);
+      transition: opacity 120ms ease;
+      writing-mode: vertical-rl;
+    }
+
+    .edge-rail-color::after { left: -1px; transform: translateY(-50%) rotate(180deg); }
+    .edge-rail-white::after { right: -1px; }
+
+    .edge-handle {
+      position: absolute;
+      z-index: 3;
+      top: 50%;
+      width: 15px;
+      height: 9px;
+      border: 1px solid var(--red);
+      background: #fff;
+      cursor: ns-resize;
+      opacity: 0;
+      transform: translateY(-50%);
+      transition: opacity 120ms ease;
+    }
+
+    .edge-handle::after {
+      position: absolute;
+      top: 3px;
+      width: 7px;
+      height: 1px;
+      background: var(--red);
+      content: "";
+    }
+
+    .edge-handle-color { right: 3px; background: var(--edge-color); }
+    .edge-handle-color::after { right: -8px; }
+    .edge-handle-white { left: 3px; }
+    .edge-handle-white::after { left: -8px; }
+
+    .edge-guide {
+      position: absolute;
+      z-index: 2;
+      left: 0;
+      right: 0;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-.5px);
+      transition: opacity 120ms ease;
+    }
+
+    .edge-guide-color { background: var(--edge-color); box-shadow: 0 0 0 1px rgba(255, 255, 255, .75); }
+    .edge-guide-white { background: #fff; box-shadow: 0 0 0 1px var(--red); }
+
+    .edge-zero-mark {
+      position: absolute;
+      z-index: 3;
+      top: 50%;
+      left: 3px;
+      width: 15px;
+      height: 1px;
+      background: var(--red);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .edge-overlay-label {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      opacity: 0;
+      padding: 2px 4px;
+      background: rgba(255, 255, 255, .9);
+      color: var(--red);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      pointer-events: none;
+      text-transform: uppercase;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+    }
+
+    .edge-preview-shell.is-dither .edge-handle,
+    .edge-preview-shell.is-dither .edge-guide,
+    .edge-preview-shell.is-dither .edge-rail::after { opacity: 1; }
+
+    .edge-preview-shell.is-halftone .edge-handle-color,
+    .edge-preview-shell.is-halftone .edge-guide,
+    .edge-preview-shell.is-halftone .edge-zero-mark { opacity: 1; }
+
+    .edge-preview-shell.is-halftone .edge-overlay-label:not(:empty) { opacity: 1; }
+    .edge-preview-shell:not(.is-dither) .edge-handle-white { pointer-events: none; }
+
+    .edge-handle:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+    .transition-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 8px;
+      line-height: 1.35;
+    }
+
     .palette-swatch-wrap { display: grid; width: 24px; height: 24px; place-items: center; }
     .palette-swatch { display: block; width: 22px; height: 22px; border: 1px solid var(--red); }
     .palette-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -807,7 +1028,13 @@
             <label class="control-label" for="luma">Posterize colors</label>
             <output class="control-value" id="luma-value">4</output>
           </div>
-          <input id="luma" type="range" min="2" max="16" value="4">
+          <input class="posterize-range" id="luma" type="range" min="1" max="16" step="1" value="4" list="posterize-values">
+          <datalist id="posterize-values">
+            <option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option>
+            <option value="5"></option><option value="6"></option><option value="7"></option><option value="8"></option>
+            <option value="9"></option><option value="10"></option><option value="11"></option><option value="12"></option>
+            <option value="13"></option><option value="14"></option><option value="15"></option><option value="16"></option>
+          </datalist>
           <p class="hint">Choose how many extracted colors become separate vector layers.</p>
         </div>
 
@@ -924,6 +1151,7 @@
   const PREVIEW_URL = "./example.png";
   const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/pjpeg"]);
   const SUPPORTED_IMAGE_EXTENSION = /\.(?:png|jpe?g)$/i;
+  const MAX_EDGE_EXPANSION = 32;
 
   const state = {
     name: "example.png",
@@ -949,6 +1177,8 @@
     curveDirty: false,
     histogram: new Uint32Array(256),
     heatmapExpanded: false,
+    edges: new Map(),
+    expandedEdges: new Set(),
     auto: true,
     autoPreferenceTouched: false,
     isLarge: false,
@@ -1712,6 +1942,66 @@
     return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "color";
   }
 
+  function getEdge(layer, create = true) {
+    const hex = typeof layer === "string" ? layer : layer.hex;
+    let edge = state.edges.get(hex);
+    if (!edge && create) {
+      edge = {
+        key: hex,
+        mode: "halftone",
+        halftoneExpansion: 0,
+        colorReach: 75,
+        whiteReach: 75
+      };
+      state.edges.set(hex, edge);
+    }
+    return edge;
+  }
+
+  function colorInvolvement(source, color) {
+    const white = [255, 255, 255];
+    const dr = color[0] - white[0];
+    const dg = color[1] - white[1];
+    const db = color[2] - white[2];
+    const lengthSquared = dr * dr * .30 + dg * dg * .59 + db * db * .11;
+    if (!lengthSquared) return 1;
+    return clamp(
+      ((source[0] - white[0]) * dr * .30 + (source[1] - white[1]) * dg * .59 + (source[2] - white[2]) * db * .11) / lengthSquared,
+      0,
+      1
+    );
+  }
+
+  function dilateMask(mask, width, height, radius) {
+    if (radius <= 0) return mask;
+    const horizontal = new Uint8Array(mask.length);
+    const expanded = new Uint8Array(mask.length);
+    for (let y = 0; y < height; y++) {
+      const row = y * width;
+      let count = 0;
+      for (let x = 0; x <= Math.min(width - 1, radius); x++) count += mask[row + x];
+      for (let x = 0; x < width; x++) {
+        horizontal[row + x] = count > 0 ? 1 : 0;
+        const removeX = x - radius;
+        const addX = x + radius + 1;
+        if (removeX >= 0) count -= mask[row + removeX];
+        if (addX < width) count += mask[row + addX];
+      }
+    }
+    for (let x = 0; x < width; x++) {
+      let count = 0;
+      for (let y = 0; y <= Math.min(height - 1, radius); y++) count += horizontal[y * width + x];
+      for (let y = 0; y < height; y++) {
+        expanded[y * width + x] = count > 0 ? 1 : 0;
+        const removeY = y - radius;
+        const addY = y + radius + 1;
+        if (removeY >= 0) count -= horizontal[removeY * width + x];
+        if (addY < height) count += horizontal[addY * width + x];
+      }
+    }
+    return expanded;
+  }
+
   async function posterize(revision = state.calculationRevision) {
     if (!state.pixels) return;
     clearTimeout(posterizeTimer);
@@ -1744,15 +2034,19 @@
 
     const masks = palette.map(() => new Uint8Array(state.width * state.height));
     const counts = palette.map(() => 0);
+    const hardCounts = palette.map(() => 0);
+    const hardNearest = palette.length > 255
+      ? new Uint16Array(state.width * state.height)
+      : new Uint8Array(state.width * state.height);
     const output = new Uint8ClampedArray(state.pixels.length);
-    let visibleCount = 0;
     const pixelCount = state.width * state.height;
     const chunkSize = state.isLarge ? 60000 : 120000;
 
+    // Establish a stable palette order before applying per-color edge treatment.
+    // This keeps each edge control tied to its extracted color as pixel shares shift.
     for (let i = 0, p = 0; i < pixelCount; i++, p += 4) {
       const alpha = state.pixels[p + 3];
-      const analyzed = alpha >= state.alpha && luminanceIsAnalyzed(pixelLuminance(state.pixels, p));
-      if (analyzed && palette.length) {
+      if (alpha >= state.alpha && luminanceIsAnalyzed(pixelLuminance(state.pixels, p)) && palette.length) {
         const source = applyToneCurve([state.pixels[p], state.pixels[p + 1], state.pixels[p + 2]]);
         let nearest = 0;
         let distance = Infinity;
@@ -1760,28 +2054,146 @@
           const candidate = colorDistance(source, palette[c]);
           if (candidate < distance) { distance = candidate; nearest = c; }
         }
-        masks[nearest][i] = 1;
-        counts[nearest]++;
-        visibleCount++;
-        output[p] = palette[nearest][0];
-        output[p + 1] = palette[nearest][1];
-        output[p + 2] = palette[nearest][2];
-        output[p + 3] = alpha;
+        hardNearest[i] = nearest;
+        hardCounts[nearest]++;
       }
       if ((i + 1) % chunkSize === 0) {
-        const percent = 12 + ((i + 1) / pixelCount) * 43;
-        setProgress(percent, `Assigning ${Math.round(((i + 1) / pixelCount) * 100)}%`);
+        setProgress(12 + ((i + 1) / pixelCount) * 18, `Mapping ${Math.round(((i + 1) / pixelCount) * 100)}%`);
         await nextPaint();
         if (!isCurrent()) { abandon(); return; }
       }
     }
 
+    const paletteOrder = palette
+      .map((rgb, index) => ({ rgb, index, hex: rgbToHex(rgb), pixels: hardCounts[index] }))
+      .sort((a, b) => b.pixels - a.pixels || a.hex.localeCompare(b.hex));
+    const activeDitherKeys = new Set();
+    for (const color of paletteOrder) {
+      const edge = getEdge(color.hex);
+      if (edge.mode === "dither") activeDitherKeys.add(edge.key);
+    }
+
+    let visibleCount = 0;
+    const ditherErrors = new Map(Array.from(activeDitherKeys, key => [key, {
+      current: new Float32Array(state.width * 3),
+      next: new Float32Array(state.width * 3)
+    }]));
+    for (let y = 0; y < state.height; y++) {
+      for (const errors of ditherErrors.values()) errors.next.fill(0);
+      for (let x = 0; x < state.width; x++) {
+        const i = y * state.width + x;
+        const p = i * 4;
+        const alpha = state.pixels[p + 3];
+        if (alpha < state.alpha || !luminanceIsAnalyzed(pixelLuminance(state.pixels, p)) || !palette.length) continue;
+
+        const source = applyToneCurve([state.pixels[p], state.pixels[p + 1], state.pixels[p + 2]]);
+        const nearest = hardNearest[i];
+        const color = palette[nearest];
+        const hex = rgbToHex(color);
+        const edge = getEdge(hex);
+        const involvement = colorInvolvement(source, color);
+        let assigned = involvement >= .5 ? nearest : -1;
+        let diffuseError = null;
+        if (edge.mode === "dither") {
+          const colorStart = 1 - edge.colorReach / 100;
+          const whiteEnd = edge.whiteReach / 100;
+          if (colorStart > whiteEnd) {
+            assigned = involvement >= colorStart ? nearest : -1;
+          } else if (involvement < colorStart) {
+            assigned = -1;
+          } else if (involvement > whiteEnd) {
+            assigned = nearest;
+          } else {
+            const errors = ditherErrors.get(edge.key);
+            const errorOffset = x * 3;
+            const adjusted = [
+              clamp(source[0] + errors.current[errorOffset], 0, 255),
+              clamp(source[1] + errors.current[errorOffset + 1], 0, 255),
+              clamp(source[2] + errors.current[errorOffset + 2], 0, 255)
+            ];
+            const chooseColor = colorDistance(adjusted, color) <= colorDistance(adjusted, [255, 255, 255]);
+            assigned = chooseColor ? nearest : -1;
+            const chosen = chooseColor ? color : [255, 255, 255];
+            diffuseError = [
+              adjusted[0] - chosen[0],
+              adjusted[1] - chosen[1],
+              adjusted[2] - chosen[2]
+            ];
+            diffuseError.key = edge.key;
+          }
+        }
+
+        if (assigned >= 0) {
+          masks[assigned][i] = 1;
+          counts[assigned]++;
+          visibleCount++;
+          output[p] = palette[assigned][0];
+          output[p + 1] = palette[assigned][1];
+          output[p + 2] = palette[assigned][2];
+          output[p + 3] = alpha;
+        }
+
+        if (diffuseError) {
+          const errors = ditherErrors.get(diffuseError.key);
+          const spread = (buffer, targetX, weight) => {
+            if (targetX < 0 || targetX >= state.width) return;
+            const offset = targetX * 3;
+            buffer[offset] += diffuseError[0] * weight;
+            buffer[offset + 1] += diffuseError[1] * weight;
+            buffer[offset + 2] += diffuseError[2] * weight;
+          };
+          spread(errors.current, x + 1, 7 / 16);
+          spread(errors.next, x - 1, 3 / 16);
+          spread(errors.next, x, 5 / 16);
+          spread(errors.next, x + 1, 1 / 16);
+        }
+      }
+      for (const errors of ditherErrors.values()) {
+        [errors.current, errors.next] = [errors.next, errors.current];
+      }
+      const processed = (y + 1) * state.width;
+      if (processed % chunkSize < state.width) {
+        setProgress(30 + (processed / pixelCount) * 25, `Assigning ${Math.round((processed / pixelCount) * 100)}%`);
+        await nextPaint();
+        if (!isCurrent()) { abandon(); return; }
+      }
+    }
+
+    const expandedColors = paletteOrder.filter(color => {
+      const edge = getEdge(color.hex);
+      return edge.mode === "halftone" && edge.halftoneExpansion > 0;
+    });
+    for (let expandedIndex = 0; expandedIndex < expandedColors.length; expandedIndex++) {
+      const color = expandedColors[expandedIndex];
+      const radius = getEdge(color.hex).halftoneExpansion;
+      setProgress(55 + (expandedIndex / Math.max(1, expandedColors.length)) * 3, `Overlay +${radius}px`);
+      await nextPaint();
+      if (!isCurrent()) { abandon(); return; }
+      const expandedMask = dilateMask(masks[color.index], state.width, state.height, radius);
+      masks[color.index] = expandedMask;
+      let expandedCount = 0;
+      for (let i = 0, p = 0; i < pixelCount; i++, p += 4) {
+        if (!expandedMask[i]) continue;
+        expandedCount++;
+        output[p] = color.rgb[0];
+        output[p + 1] = color.rgb[1];
+        output[p + 2] = color.rgb[2];
+        output[p + 3] = 255;
+      }
+      counts[color.index] = expandedCount;
+    }
+    if (expandedColors.length) {
+      visibleCount = 0;
+      for (let p = 3; p < output.length; p += 4) if (output[p]) visibleCount++;
+    }
+
     const usedNames = new Map();
     const layers = [];
-    for (let index = 0; index < palette.length; index++) {
+    for (let rank = 0; rank < paletteOrder.length; rank++) {
+      const index = paletteOrder[rank].index;
       const rgb = palette[index];
-      setProgress(58 + (index / Math.max(1, palette.length)) * 34, `Tracing ${index + 1}/${palette.length}`);
-      els.status.textContent = `Tracing color ${index + 1} of ${palette.length}`;
+      setProgress(58 + (rank / Math.max(1, palette.length)) * 34, `Tracing ${rank + 1}/${palette.length}`);
+      els.status.textContent = `Tracing color ${rank + 1} of ${palette.length}`;
       await nextPaint();
       if (!isCurrent()) { abandon(); return; }
       const loops = traceMask(masks[index], state.width, state.height);
@@ -1796,6 +2208,7 @@
         hex,
         name,
         pixels: counts[index],
+        hardPixels: hardCounts[index],
         mask: masks[index],
         loops,
         path: loops.map(loop => loopToPath(loop, state.smooth)).join(""),
@@ -1805,7 +2218,7 @@
       });
     }
     if (!isCurrent()) { abandon(); return; }
-    state.layers = layers.filter(layer => layer.pixels > 0).sort((a, b) => b.pixels - a.pixels);
+    state.layers = layers.filter(layer => layer.hardPixels > 0).sort((a, b) => b.hardPixels - a.hardPixels || a.hex.localeCompare(b.hex));
 
     setProgress(95, "Rendering");
     await nextPaint();
@@ -1877,6 +2290,235 @@
     ];
   }
 
+  function drawEdgePreview(canvas, layer, edge) {
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    const context = canvas.getContext("2d");
+    const image = context.createImageData(width, height);
+    const colorStart = 1 - edge.colorReach / 100;
+    const whiteEnd = edge.whiteReach / 100;
+    let currentError = new Float32Array(width);
+    let nextError = new Float32Array(width);
+
+    for (let y = 0; y < height; y++) {
+      nextError.fill(0);
+      for (let x = 0; x < width; x++) {
+        const involvement = height === 1 ? .5 : 1 - y / (height - 1);
+        const halftoneThreshold = .5 - (edge.halftoneExpansion / MAX_EDGE_EXPANSION) * .5;
+        let colored = involvement >= halftoneThreshold;
+        if (edge.mode === "dither") {
+          if (colorStart > whiteEnd) {
+            colored = involvement >= colorStart;
+          } else if (involvement < colorStart) {
+            colored = false;
+          } else if (involvement > whiteEnd) {
+            colored = true;
+          } else {
+            const value = clamp(involvement * 255 + currentError[x], 0, 255);
+            colored = value >= 127.5;
+            const error = value - (colored ? 255 : 0);
+            if (x + 1 < width) currentError[x + 1] += error * 7 / 16;
+            if (x > 0) nextError[x - 1] += error * 3 / 16;
+            nextError[x] += error * 5 / 16;
+            if (x + 1 < width) nextError[x + 1] += error * 1 / 16;
+          }
+        }
+        const p = (y * width + x) * 4;
+        if (colored) {
+          image.data[p] = layer.rgb[0];
+          image.data[p + 1] = layer.rgb[1];
+          image.data[p + 2] = layer.rgb[2];
+          image.data[p + 3] = 255;
+        }
+      }
+      [currentError, nextError] = [nextError, currentError];
+    }
+    context.clearRect(0, 0, width, height);
+    context.putImageData(image, 0, 0);
+  }
+
+  function createEdgeElement(layer, index) {
+    const edge = getEdge(layer);
+    const open = state.expandedEdges.has(edge.key);
+    const wrapper = document.createElement("div");
+    wrapper.className = `palette-transition${open ? " is-open" : ""}`;
+
+    const toggle = document.createElement("button");
+    toggle.className = "transition-toggle";
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    const panelId = `edge-${index}-${slugify(edge.key)}`;
+    toggle.setAttribute("aria-controls", panelId);
+    const title = document.createElement("span");
+    title.className = "transition-title";
+    title.textContent = edge.mode === "dither" ? "Edge: Dither" : "Edge: Halftone";
+    const disclosure = document.createElement("span");
+    disclosure.className = "transition-disclosure";
+    disclosure.textContent = open ? "−" : "+";
+    toggle.append(title, disclosure);
+
+    const panel = document.createElement("div");
+    panel.className = "transition-panel";
+    panel.id = panelId;
+    panel.hidden = !open;
+    const method = document.createElement("div");
+    method.className = "transition-method";
+    method.setAttribute("role", "radiogroup");
+    method.setAttribute("aria-label", `Edge treatment for ${layer.name}`);
+    const radioName = `edge-method-${index}-${slugify(edge.key)}`;
+    for (const [value, labelText] of [["halftone", "Halftone"], ["dither", "Dither"]]) {
+      const label = document.createElement("label");
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = radioName;
+      radio.value = value;
+      radio.checked = edge.mode === value;
+      const text = document.createElement("span");
+      text.textContent = labelText;
+      radio.addEventListener("change", () => {
+        if (!radio.checked) return;
+        edge.mode = value;
+        title.textContent = value === "dither" ? "Edge: Dither" : "Edge: Halftone";
+        previewShell.classList.toggle("is-dither", value === "dither");
+        previewShell.classList.toggle("is-halftone", value === "halftone");
+        updateHandleAvailability();
+        updateGeometry();
+        drawEdgePreview(canvas, layer, edge);
+        queuePosterize();
+      });
+      label.append(radio, text);
+      method.append(label);
+    }
+
+    const previewShell = document.createElement("div");
+    previewShell.className = `edge-preview-shell ${edge.mode === "dither" ? "is-dither" : "is-halftone"}`;
+    previewShell.style.setProperty("--edge-color", layer.hex);
+    const colorRail = document.createElement("div");
+    colorRail.className = "edge-rail edge-rail-color";
+    colorRail.dataset.label = "Color";
+    const preview = document.createElement("div");
+    preview.className = "transition-preview edge-preview";
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("aria-label", `Macro preview of ${layer.name} fading into white space`);
+    const colorGuide = document.createElement("span");
+    colorGuide.className = "edge-guide edge-guide-color";
+    const whiteGuide = document.createElement("span");
+    whiteGuide.className = "edge-guide edge-guide-white";
+    const overlayLabel = document.createElement("span");
+    overlayLabel.className = "edge-overlay-label";
+    preview.append(canvas, colorGuide, whiteGuide, overlayLabel);
+    const whiteRail = document.createElement("div");
+    whiteRail.className = "edge-rail edge-rail-white";
+    whiteRail.dataset.label = "White";
+    const zeroMark = document.createElement("span");
+    zeroMark.className = "edge-zero-mark";
+    whiteRail.append(zeroMark);
+
+    const updateGeometry = () => {
+      const halftone = edge.mode === "halftone";
+      const colorTop = halftone
+        ? 50 + (edge.halftoneExpansion / MAX_EDGE_EXPANSION) * 50
+        : edge.colorReach;
+      const whiteTop = halftone ? 50 : 100 - edge.whiteReach;
+      colorHandle.style.top = `${colorTop}%`;
+      whiteHandle.style.top = `${whiteTop}%`;
+      colorGuide.style.top = `${colorTop}%`;
+      whiteGuide.style.top = `${whiteTop}%`;
+      overlayLabel.style.top = `${50 + (colorTop - 50) / 2}%`;
+      overlayLabel.textContent = edge.halftoneExpansion ? `+ ${edge.halftoneExpansion} px` : "";
+      colorHandle.setAttribute("aria-valuemin", "0");
+      colorHandle.setAttribute("aria-valuemax", halftone ? String(MAX_EDGE_EXPANSION) : "100");
+      colorHandle.setAttribute("aria-valuenow", halftone ? edge.halftoneExpansion : edge.colorReach);
+      colorHandle.setAttribute("aria-valuetext", halftone ? `Add ${edge.halftoneExpansion} pixels` : `${edge.colorReach}% color reach`);
+      whiteHandle.setAttribute("aria-valuenow", edge.whiteReach);
+      whiteHandle.setAttribute("aria-valuetext", `${edge.whiteReach}% white reach`);
+    };
+
+    const makeHandle = (rail, kind) => {
+      const handle = document.createElement("div");
+      handle.className = `edge-handle edge-handle-${kind}`;
+      handle.tabIndex = 0;
+      handle.setAttribute("role", "slider");
+      handle.setAttribute("aria-label", `${kind === "color" ? layer.name : "White"} reach`);
+      handle.setAttribute("aria-valuemin", "0");
+      handle.setAttribute("aria-valuemax", "100");
+      const setFromTop = topPercent => {
+        const clampedTop = clamp(topPercent, 0, 100);
+        if (kind === "color" && edge.mode === "halftone") {
+          edge.halftoneExpansion = Math.round(clamp((clampedTop - 50) / 50, 0, 1) * MAX_EDGE_EXPANSION);
+        } else if (kind === "color") edge.colorReach = Math.round(clampedTop);
+        else edge.whiteReach = Math.round(100 - clampedTop);
+        updateGeometry();
+        drawEdgePreview(canvas, layer, edge);
+        queuePosterize();
+      };
+      const moveToPointer = event => {
+        const rect = preview.getBoundingClientRect();
+        setFromTop(((event.clientY - rect.top) / rect.height) * 100);
+      };
+      handle.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        handle.setPointerCapture(event.pointerId);
+        moveToPointer(event);
+      });
+      handle.addEventListener("pointermove", event => {
+        if (handle.hasPointerCapture(event.pointerId)) moveToPointer(event);
+      });
+      handle.addEventListener("keydown", event => {
+        if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const currentTop = kind === "color"
+          ? (edge.mode === "halftone" ? 50 + (edge.halftoneExpansion / MAX_EDGE_EXPANSION) * 50 : edge.colorReach)
+          : 100 - edge.whiteReach;
+        const step = event.shiftKey ? 10 : 1;
+        const nextTop = event.key === "Home" ? 0 : event.key === "End" ? 100 : currentTop + (event.key === "ArrowUp" ? -step : step);
+        setFromTop(nextTop);
+      });
+      rail.append(handle);
+      return handle;
+    };
+
+    const colorHandle = makeHandle(colorRail, "color");
+    const whiteHandle = makeHandle(whiteRail, "white");
+    const updateHandleAvailability = () => {
+      colorHandle.tabIndex = 0;
+      colorHandle.setAttribute("aria-disabled", "false");
+      const whiteEnabled = edge.mode === "dither";
+      whiteHandle.tabIndex = whiteEnabled ? 0 : -1;
+      whiteHandle.setAttribute("aria-disabled", whiteEnabled ? "false" : "true");
+      colorHandle.setAttribute("aria-label", edge.mode === "halftone" ? `${layer.name} edge overlay` : `${layer.name} reach`);
+    };
+    previewShell.append(colorRail, preview, whiteRail);
+    updateGeometry();
+    updateHandleAvailability();
+    const note = document.createElement("p");
+    note.className = "transition-note";
+    note.textContent = "Drag the side handles vertically. The left line sets color reach; the right line sets white reach. Their overlap is Floyd–Steinberg dither.";
+    panel.append(method, previewShell, note);
+    wrapper.append(toggle, panel);
+
+    toggle.addEventListener("click", () => {
+      const willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      wrapper.classList.toggle("is-open", willOpen);
+      toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      disclosure.textContent = willOpen ? "−" : "+";
+      if (willOpen) {
+        state.expandedEdges.add(edge.key);
+        requestAnimationFrame(() => drawEdgePreview(canvas, layer, edge));
+      } else {
+        state.expandedEdges.delete(edge.key);
+      }
+    });
+    if (open) requestAnimationFrame(() => drawEdgePreview(canvas, layer, edge));
+    return wrapper;
+  }
+
   function renderPalette() {
     els.palette.replaceChildren();
     els.paletteShareBar.replaceChildren();
@@ -1904,7 +2546,8 @@
         : "Color area heat map awaiting calculation"
     );
 
-    for (const layer of state.layers) {
+    for (let layerIndex = 0; layerIndex < state.layers.length; layerIndex++) {
+      const layer = state.layers[layerIndex];
       const share = layer.pixels / total;
       const segment = document.createElement("button");
       segment.className = "palette-share-segment";
@@ -1932,6 +2575,7 @@
       amount.textContent = share < .001 ? "<0.1%" : `${(share * 100).toFixed(1)}%`;
       item.append(swatchWrap, name, hex, amount);
       els.palette.append(item);
+      els.palette.append(createEdgeElement(layer, layerIndex));
     }
   }
 
@@ -2110,6 +2754,8 @@
       state.ready = true;
       state.posterCanvas = null;
       state.layers = [];
+      state.edges.clear();
+      state.expandedEdges.clear();
       state.isLarge = state.width * state.height > 4000000 || Math.max(state.width, state.height) > 4096;
       if (state.isLarge && !state.autoPreferenceTouched) state.auto = false;
       state.calculationRevision++;

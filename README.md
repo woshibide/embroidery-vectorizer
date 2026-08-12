@@ -7,8 +7,5 @@ The project is a build-free static site. To publish it with GitHub Pages, serve 
 
 
 ## Dithering
-within each color to have a radio toggle between halftone / dither
 
-for dither
-floyd steinberg
-ordered
+Every palette color has an expandable Edge control against white/transparent space. Halftone keeps a hard edge and its vertical handle can add up to 32 pixels of real mask overlay beyond the midpoint. Dither applies Floyd–Steinberg error diffusion to that color’s edge, with vertical handles setting the color and white reach limits.
