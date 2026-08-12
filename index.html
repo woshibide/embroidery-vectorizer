@@ -267,6 +267,53 @@
       line-height: 1.45;
     }
 
+    .tone-panel {
+      border: 1px solid var(--line);
+      background: #fff8f6;
+    }
+
+    .tone-plot {
+      position: relative;
+      height: 112px;
+      border-bottom: 1px solid var(--line);
+      background-image: linear-gradient(to right, rgba(243, 38, 18, .09) 1px, transparent 1px);
+      background-size: 25% 100%;
+    }
+
+    #tone-curve {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .tone-sliders {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tone-slider {
+      min-width: 0;
+      padding: 9px 8px 10px;
+      border-right: 1px solid var(--line);
+    }
+
+    .tone-slider:last-child { border-right: 0; }
+
+    .tone-slider-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-bottom: 8px;
+      color: var(--red);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .tone-slider input[type="range"] { height: 1px; }
+    .tone-slider input[type="range"]::-webkit-slider-thumb { width: 10px; height: 10px; }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -332,9 +379,9 @@
       top: 0;
       left: 0;
       right: 0;
-      display: flex;
+      display: grid;
+      grid-template-columns: auto minmax(190px, 1fr) auto;
       align-items: center;
-      justify-content: space-between;
       gap: 16px;
       min-height: 69px;
       padding: 15px 22px;
@@ -367,6 +414,108 @@
     .view-tab.active { background: var(--red); color: white; }
 
     .canvas-actions { display: flex; align-items: center; gap: 9px; }
+
+    .calculation-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 0;
+      max-width: 360px;
+      width: 100%;
+      justify-self: center;
+    }
+
+    .progress-control {
+      display: grid;
+      grid-template-columns: minmax(78px, 1fr) auto;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 8px;
+      border: 1px solid var(--line);
+      background: #ffe4df;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: var(--progress, 0%);
+      height: 100%;
+      background: var(--red);
+      transition: width 120ms linear;
+    }
+
+    .progress-label {
+      min-width: 64px;
+      color: var(--red);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 8px;
+      letter-spacing: .07em;
+      text-align: right;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .recalculate-button,
+    .auto-toggle {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--red);
+      cursor: pointer;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .recalculate-button {
+      position: relative;
+      min-width: 116px;
+      padding: 0 13px;
+      overflow: hidden;
+    }
+
+    .recalculate-button::before {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      background: #ffe0da;
+      content: "";
+      transition: width 120ms linear;
+    }
+
+    .recalculate-button:disabled::before { width: var(--progress, 0%); }
+
+    .recalculate-button span { position: relative; z-index: 1; }
+    .recalculate-button:hover,
+    .recalculate-button.is-dirty { background: var(--red); color: #fff; }
+    .recalculate-button:disabled { cursor: wait; opacity: .72; }
+
+    .auto-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 9px;
+    }
+
+    .auto-toggle::before {
+      width: 7px;
+      height: 7px;
+      border: 1px solid var(--red);
+      background: #fff;
+      content: "";
+    }
+
+    .auto-toggle[aria-checked="true"] { background: var(--red); color: #fff; }
+    .auto-toggle[aria-checked="true"]::before { border-color: #fff; background: #fff; }
 
     .icon-button {
       min-width: 34px;
@@ -462,9 +611,27 @@
       scrollbar-width: thin;
     }
 
+    .palette-share-bar {
+      display: flex;
+      width: 100%;
+      height: 14px;
+      margin-top: 14px;
+      border: 1px solid var(--red);
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .palette-share-segment {
+      height: 100%;
+      min-width: 1px;
+      border-right: 1px solid rgba(255, 255, 255, .75);
+    }
+
+    .palette-share-segment:last-child { border-right: 0; }
+
     .palette-item {
       display: grid;
-      grid-template-columns: 22px minmax(0, 1fr) auto;
+      grid-template-columns: 24px minmax(0, 1fr) auto 34px;
       align-items: center;
       gap: 9px;
       min-height: 30px;
@@ -475,9 +642,11 @@
       text-transform: uppercase;
     }
 
-    .palette-swatch { width: 22px; height: 22px; border: 1px solid var(--red); }
+    .palette-swatch-wrap { display: grid; width: 24px; height: 24px; place-items: center; }
+    .palette-swatch { display: block; border: 1px solid var(--red); }
     .palette-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .palette-hex { color: var(--muted); }
+    .palette-share { color: var(--red); text-align: right; }
 
     @media (max-width: 820px) {
       body { overflow: auto; }
@@ -486,14 +655,18 @@
       .workspace { height: 72vh; min-height: 520px; }
       .workspace-bar { padding-inline: 14px; }
       .view-tab { min-width: 70px; }
+      .progress-label { display: none; }
     }
 
     @media (max-width: 460px) {
       .sidebar { padding: 23px 19px; }
-      .workspace-bar { align-items: flex-start; flex-direction: column; }
-      #canvas-wrap { top: 111px; }
-      .workspace-bar { min-height: 111px; }
-      .canvas-actions { align-self: flex-end; margin-top: -49px; }
+      .workspace-bar { grid-template-columns: minmax(0, 1fr) auto; min-height: 121px; }
+      .view-tabs { grid-column: 1; grid-row: 1; }
+      .view-tab { min-width: 0; padding-inline: 8px; }
+      .canvas-actions { grid-column: 2; grid-row: 1; }
+      .calculation-control { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+      #canvas-wrap { top: 121px; }
+      .zoom-readout, #zoom-out, #zoom-in { display: none; }
     }
   </style>
 </head>
@@ -535,6 +708,33 @@
 
         <div class="control">
           <div class="control-head">
+            <span class="control-label">Tone distribution</span>
+            <output class="control-value" id="tone-value">0 — 255</output>
+          </div>
+          <div class="tone-panel">
+            <div class="tone-plot">
+              <canvas id="tone-curve" aria-label="Image luminance histogram with black, curve, and white cutoff points"></canvas>
+            </div>
+            <div class="tone-sliders">
+              <label class="tone-slider">
+                <span class="tone-slider-head"><span>Black</span><output id="black-value">0</output></span>
+                <input id="black-point" type="range" min="0" max="96" value="0" aria-label="Black cutoff point">
+              </label>
+              <label class="tone-slider">
+                <span class="tone-slider-head"><span>Curve</span><output id="gamma-value">1.00</output></span>
+                <input id="gamma" type="range" min="40" max="250" value="100" aria-label="Midtone curve">
+              </label>
+              <label class="tone-slider">
+                <span class="tone-slider-head"><span>White</span><output id="white-value">255</output></span>
+                <input id="white-point" type="range" min="159" max="255" value="255" aria-label="White cutoff point">
+              </label>
+            </div>
+          </div>
+          <p class="hint">The histogram shows source brightness. Pull in black or white cutoffs, then bend the curve to redistribute tones before colors are extracted.</p>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
             <label class="control-label" for="alpha">Alpha cutoff</label>
             <output class="control-value" id="alpha-value">1</output>
           </div>
@@ -562,6 +762,7 @@
           <div class="stat"><span class="stat-label">Pixels</span><span class="stat-value" id="stat-pixels">—</span></div>
         </div>
 
+        <div class="palette-share-bar" id="palette-share-bar" aria-label="Proportion of each extracted color"></div>
         <div class="palette" id="palette" aria-label="Extracted color layers"></div>
 
         <div class="export-row">
@@ -577,6 +778,16 @@
           <button class="view-tab" data-view="original" role="tab">Original</button>
           <button class="view-tab active" data-view="vector" role="tab" aria-selected="true">Posterized</button>
           <button class="view-tab" data-view="overlay" role="tab">Layers</button>
+        </div>
+        <div class="calculation-control" id="calculation-control">
+          <div class="progress-control" id="progress-control" aria-live="polite">
+            <div class="progress-track" role="progressbar" aria-label="Posterization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-label" id="progress-label">Ready</span>
+          </div>
+          <button class="recalculate-button" id="recalculate" type="button" hidden><span>Recalculate</span></button>
+          <button class="auto-toggle" id="auto-toggle" type="button" role="switch" aria-checked="true" aria-label="Toggle automatic recalculation">Auto</button>
         </div>
         <div class="canvas-actions">
           <button class="icon-button" id="zoom-out" type="button" aria-label="Zoom out">−</button>
@@ -614,6 +825,17 @@
     smooth: 0,
     paletteCount: 4,
     alpha: 1,
+    toneBlack: 0,
+    toneWhite: 255,
+    toneGamma: 1,
+    histogram: new Uint32Array(256),
+    auto: true,
+    autoPreferenceTouched: false,
+    isLarge: false,
+    dirty: false,
+    calculating: false,
+    calculationRevision: 0,
+    runId: 0,
     scale: 1,
     fitScale: 1,
     offsetX: 0,
@@ -640,10 +862,19 @@
     alphaValue: $("#alpha-value"),
     smooth: $("#smooth"),
     smoothValue: $("#smooth-value"),
+    toneCanvas: $("#tone-curve"),
+    toneValue: $("#tone-value"),
+    blackPoint: $("#black-point"),
+    blackValue: $("#black-value"),
+    gamma: $("#gamma"),
+    gammaValue: $("#gamma-value"),
+    whitePoint: $("#white-point"),
+    whiteValue: $("#white-value"),
     layers: $("#stat-shapes"),
     nodes: $("#stat-nodes"),
     pixels: $("#stat-pixels"),
     palette: $("#palette"),
+    paletteShareBar: $("#palette-share-bar"),
     download: $("#download"),
     copy: $("#copy"),
     wrap: $("#canvas-wrap"),
@@ -652,14 +883,124 @@
     status: $("#status-text")
   };
   els.note = $("#canvas-note");
+  els.progressControl = $("#progress-control");
+  els.progressTrack = $(".progress-track");
+  els.progressFill = $("#progress-fill");
+  els.progressLabel = $("#progress-label");
+  els.recalculate = $("#recalculate");
+  els.recalculateLabel = els.recalculate.querySelector("span");
+  els.autoToggle = $("#auto-toggle");
 
   let sketch = null;
   let toastTimer = null;
   let posterizeTimer = null;
 
+  const nextPaint = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
+
   function setRangeFill(input) {
     const pct = ((Number(input.value) - Number(input.min)) / (Number(input.max) - Number(input.min))) * 100;
     input.style.setProperty("--fill", `${pct}%`);
+  }
+
+  function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+  function mapToneValue(value) {
+    const range = Math.max(1, state.toneWhite - state.toneBlack);
+    const normalized = clamp((value - state.toneBlack) / range, 0, 1);
+    return Math.round(Math.pow(normalized, 1 / state.toneGamma) * 255);
+  }
+
+  function applyToneCurve(rgb) {
+    return rgb.map(mapToneValue);
+  }
+
+  function computeHistogram() {
+    state.histogram = new Uint32Array(256);
+    if (!state.pixels) return;
+    const pixelCount = state.pixels.length / 4;
+    const step = Math.max(1, Math.ceil(pixelCount / 300000));
+    for (let i = 0; i < pixelCount; i += step) {
+      const p = i * 4;
+      if (state.pixels[p + 3] < state.alpha) continue;
+      const luma = Math.round(state.pixels[p] * .2126 + state.pixels[p + 1] * .7152 + state.pixels[p + 2] * .0722);
+      state.histogram[luma]++;
+    }
+  }
+
+  function renderToneHistogram() {
+    const canvas = els.toneCanvas;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(rect.height * ratio);
+    const context = canvas.getContext("2d");
+    context.scale(ratio, ratio);
+    const width = rect.width;
+    const height = rect.height;
+    context.clearRect(0, 0, width, height);
+
+    const peak = Math.max(1, ...state.histogram);
+    context.fillStyle = "rgba(243, 38, 18, .22)";
+    context.beginPath();
+    context.moveTo(0, height);
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 255) * width;
+      const y = height - Math.sqrt(state.histogram[i] / peak) * (height - 8);
+      context.lineTo(x, y);
+    }
+    context.lineTo(width, height);
+    context.closePath();
+    context.fill();
+
+    const blackX = (state.toneBlack / 255) * width;
+    const whiteX = (state.toneWhite / 255) * width;
+    context.fillStyle = "rgba(243, 38, 18, .08)";
+    context.fillRect(0, 0, blackX, height);
+    context.fillRect(whiteX, 0, width - whiteX, height);
+
+    context.strokeStyle = "#f32612";
+    context.lineWidth = 2;
+    context.beginPath();
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 255) * width;
+      const y = height - (mapToneValue(i) / 255) * height;
+      if (i === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    }
+    context.stroke();
+
+    context.fillStyle = "#fff";
+    context.strokeStyle = "#f32612";
+    context.lineWidth = 2;
+    for (const value of [state.toneBlack, state.toneWhite]) {
+      const x = (value / 255) * width;
+      const y = height - (mapToneValue(value) / 255) * height;
+      context.beginPath();
+      context.arc(x, clamp(y, 6, height - 6), 5, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+    }
+  }
+
+  function setProgress(value, label) {
+    const percent = clamp(Math.round(value), 0, 100);
+    els.progressFill.style.setProperty("--progress", `${percent}%`);
+    els.recalculate.style.setProperty("--progress", `${percent}%`);
+    els.progressTrack.setAttribute("aria-valuenow", String(percent));
+    els.progressLabel.textContent = label || `${percent}%`;
+    if (state.calculating) els.recalculateLabel.textContent = `${percent}% calculating`;
+  }
+
+  function updateCalculationControl() {
+    const manualPresentation = state.isLarge || !state.auto;
+    els.progressControl.hidden = manualPresentation;
+    els.recalculate.hidden = !manualPresentation;
+    els.recalculate.disabled = state.calculating;
+    els.recalculate.classList.toggle("is-dirty", state.dirty && !state.calculating);
+    if (!state.calculating) els.recalculateLabel.textContent = "Recalculate";
+    els.autoToggle.setAttribute("aria-checked", state.auto ? "true" : "false");
+    els.autoToggle.title = state.auto ? "Changes calculate instantly" : "Changes wait for Recalculate";
   }
 
   function toast(message) {
@@ -791,7 +1132,8 @@
     for (let i = 0; i < pixelCount; i += step) {
       const p = i * 4;
       if (pixels[p + 3] < alphaCutoff) continue;
-      const key = (pixels[p] << 16) | (pixels[p + 1] << 8) | pixels[p + 2];
+      const mapped = applyToneCurve([pixels[p], pixels[p + 1], pixels[p + 2]]);
+      const key = (mapped[0] << 16) | (mapped[1] << 8) | mapped[2];
       histogram.set(key, (histogram.get(key) || 0) + 1);
     }
     const colors = Array.from(histogram, ([key, count]) => ({
@@ -896,41 +1238,77 @@
     return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "color";
   }
 
-  function posterize() {
+  async function posterize(revision = state.calculationRevision) {
     if (!state.pixels) return;
+    clearTimeout(posterizeTimer);
+    const runId = ++state.runId;
+    state.calculating = true;
+    state.dirty = true;
+    setProgress(2, "Preparing");
+    updateCalculationControl();
     els.status.textContent = "Extracting colors";
+    await nextPaint();
+    const isCurrent = () => runId === state.runId && revision === state.calculationRevision;
+    const abandon = () => {
+      if (runId === state.runId) {
+        state.calculating = false;
+        state.dirty = true;
+        updateCalculationControl();
+      }
+    };
+    if (!isCurrent()) { abandon(); return; }
+
     const previousPositions = new Map(state.layers.map(layer => [layer.hex, {
       dragX: layer.dragX || 0,
       dragY: layer.dragY || 0,
       z: layer.z || 0
     }]));
     const palette = extractPalette(state.pixels, state.alpha, state.paletteCount);
+    setProgress(12, "Palette");
+    await nextPaint();
+    if (!isCurrent()) { abandon(); return; }
+
     const masks = palette.map(() => new Uint8Array(state.width * state.height));
     const counts = palette.map(() => 0);
     const output = new Uint8ClampedArray(state.pixels.length);
     let visibleCount = 0;
+    const pixelCount = state.width * state.height;
+    const chunkSize = state.isLarge ? 60000 : 120000;
 
-    for (let i = 0, p = 0; i < state.width * state.height; i++, p += 4) {
+    for (let i = 0, p = 0; i < pixelCount; i++, p += 4) {
       const alpha = state.pixels[p + 3];
-      if (alpha < state.alpha || !palette.length) continue;
-      const source = [state.pixels[p], state.pixels[p + 1], state.pixels[p + 2]];
-      let nearest = 0;
-      let distance = Infinity;
-      for (let c = 0; c < palette.length; c++) {
-        const candidate = colorDistance(source, palette[c]);
-        if (candidate < distance) { distance = candidate; nearest = c; }
+      if (alpha >= state.alpha && palette.length) {
+        const source = applyToneCurve([state.pixels[p], state.pixels[p + 1], state.pixels[p + 2]]);
+        let nearest = 0;
+        let distance = Infinity;
+        for (let c = 0; c < palette.length; c++) {
+          const candidate = colorDistance(source, palette[c]);
+          if (candidate < distance) { distance = candidate; nearest = c; }
+        }
+        masks[nearest][i] = 1;
+        counts[nearest]++;
+        visibleCount++;
+        output[p] = palette[nearest][0];
+        output[p + 1] = palette[nearest][1];
+        output[p + 2] = palette[nearest][2];
+        output[p + 3] = alpha;
       }
-      masks[nearest][i] = 1;
-      counts[nearest]++;
-      visibleCount++;
-      output[p] = palette[nearest][0];
-      output[p + 1] = palette[nearest][1];
-      output[p + 2] = palette[nearest][2];
-      output[p + 3] = alpha;
+      if ((i + 1) % chunkSize === 0) {
+        const percent = 12 + ((i + 1) / pixelCount) * 43;
+        setProgress(percent, `Assigning ${Math.round(((i + 1) / pixelCount) * 100)}%`);
+        await nextPaint();
+        if (!isCurrent()) { abandon(); return; }
+      }
     }
 
     const usedNames = new Map();
-    state.layers = palette.map((rgb, index) => {
+    const layers = [];
+    for (let index = 0; index < palette.length; index++) {
+      const rgb = palette[index];
+      setProgress(58 + (index / Math.max(1, palette.length)) * 34, `Tracing ${index + 1}/${palette.length}`);
+      els.status.textContent = `Tracing color ${index + 1} of ${palette.length}`;
+      await nextPaint();
+      if (!isCurrent()) { abandon(); return; }
       const loops = traceMask(masks[index], state.width, state.height);
       const baseName = describeColor(rgb);
       const occurrence = (usedNames.get(baseName) || 0) + 1;
@@ -938,7 +1316,7 @@
       const name = occurrence > 1 ? `${baseName} ${occurrence}` : baseName;
       const hex = rgbToHex(rgb);
       const previous = previousPositions.get(hex);
-      return {
+      layers.push({
         rgb,
         hex,
         name,
@@ -949,9 +1327,14 @@
         dragX: previous?.dragX || 0,
         dragY: previous?.dragY || 0,
         z: previous?.z || index
-      };
-    }).filter(layer => layer.pixels > 0).sort((a, b) => b.pixels - a.pixels);
+      });
+    }
+    if (!isCurrent()) { abandon(); return; }
+    state.layers = layers.filter(layer => layer.pixels > 0).sort((a, b) => b.pixels - a.pixels);
 
+    setProgress(95, "Rendering");
+    await nextPaint();
+    if (!isCurrent()) { abandon(); return; }
     state.posterCanvas = document.createElement("canvas");
     state.posterCanvas.width = state.width;
     state.posterCanvas.height = state.height;
@@ -962,31 +1345,60 @@
     els.nodes.textContent = nodeCount.toLocaleString();
     els.pixels.textContent = visibleCount.toLocaleString();
     els.status.textContent = `${state.layers.length} named layer${state.layers.length === 1 ? "" : "s"}`;
+    state.calculating = false;
+    state.dirty = false;
+    setProgress(100, "Ready");
+    updateCalculationControl();
     renderPalette();
     if (sketch) sketch.redraw();
   }
 
   function queuePosterize() {
     clearTimeout(posterizeTimer);
-    els.status.textContent = "Updating posterize";
-    posterizeTimer = setTimeout(posterize, 70);
+    state.calculationRevision++;
+    state.dirty = true;
+    els.status.textContent = state.auto ? "Updating posterize" : "Changes ready to calculate";
+    updateCalculationControl();
+    if (state.auto) {
+      const revision = state.calculationRevision;
+      posterizeTimer = setTimeout(() => posterize(revision), 100);
+    }
   }
 
   function renderPalette() {
     els.palette.replaceChildren();
+    els.paletteShareBar.replaceChildren();
+    const total = state.layers.reduce((sum, layer) => sum + layer.pixels, 0) || 1;
     for (const layer of state.layers) {
+      const share = layer.pixels / total;
+      const segment = document.createElement("span");
+      segment.className = "palette-share-segment";
+      segment.style.width = `${share * 100}%`;
+      segment.style.backgroundColor = layer.hex;
+      segment.title = `${layer.name}: ${(share * 100).toFixed(1)}%`;
+      els.paletteShareBar.append(segment);
+
       const item = document.createElement("div");
       item.className = "palette-item";
+      const swatchWrap = document.createElement("span");
+      swatchWrap.className = "palette-swatch-wrap";
       const swatch = document.createElement("span");
       swatch.className = "palette-swatch";
       swatch.style.backgroundColor = layer.hex;
+      const squareSize = Math.max(4, Math.sqrt(share) * 24);
+      swatch.style.width = `${squareSize}px`;
+      swatch.style.height = `${squareSize}px`;
+      swatchWrap.append(swatch);
       const name = document.createElement("span");
       name.className = "palette-name";
       name.textContent = layer.name;
       const hex = document.createElement("span");
       hex.className = "palette-hex";
       hex.textContent = layer.hex;
-      item.append(swatch, name, hex);
+      const amount = document.createElement("span");
+      amount.className = "palette-share";
+      amount.textContent = share < .001 ? "<0.1%" : `${(share * 100).toFixed(1)}%`;
+      item.append(swatchWrap, name, hex, amount);
       els.palette.append(item);
     }
   }
@@ -1161,7 +1573,7 @@
     els.status.textContent = "Reading source";
     const img = new Image();
     img.decoding = "async";
-    img.onload = () => {
+    img.onload = async () => {
       const canvas = document.createElement("canvas");
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
@@ -1175,11 +1587,27 @@
       state.width = canvas.width;
       state.height = canvas.height;
       state.ready = true;
+      state.posterCanvas = null;
+      state.layers = [];
+      state.isLarge = state.width * state.height > 4000000 || Math.max(state.width, state.height) > 4096;
+      if (state.isLarge && !state.autoPreferenceTouched) state.auto = false;
+      state.calculationRevision++;
+      state.dirty = true;
       els.thumb.src = src;
       els.fileName.textContent = state.name;
-      els.fileMeta.textContent = `${state.width} × ${state.height} px · RGBA`;
-      posterize();
+      els.fileMeta.textContent = `${state.width} × ${state.height} px · RGBA${state.isLarge ? " · LARGE" : ""}`;
+      els.layers.textContent = "—";
+      els.nodes.textContent = "—";
+      els.pixels.textContent = "—";
+      computeHistogram();
+      renderToneHistogram();
+      renderPalette();
+      setProgress(0, state.auto ? "Queued" : "Awaiting");
+      updateCalculationControl();
       fitArtwork();
+      if (sketch) sketch.redraw();
+      if (state.auto) await posterize(state.calculationRevision);
+      else els.status.textContent = "Large image · adjust, then recalculate";
     };
     img.onerror = () => toast("Could not read that image");
     img.src = src;
@@ -1204,7 +1632,9 @@
   }
 
   function bindUI() {
-    [els.colors, els.alpha, els.smooth].forEach(setRangeFill);
+    [els.colors, els.alpha, els.smooth, els.blackPoint, els.gamma, els.whitePoint].forEach(setRangeFill);
+    updateCalculationControl();
+    window.addEventListener("resize", renderToneHistogram);
     els.fileInput.addEventListener("change", event => acceptFile(event.target.files[0]));
     els.dropzone.addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") {
@@ -1232,6 +1662,8 @@
       state.alpha = Number(els.alpha.value);
       els.alphaValue.textContent = state.alpha;
       setRangeFill(els.alpha);
+      computeHistogram();
+      renderToneHistogram();
       queuePosterize();
     });
     els.smooth.addEventListener("input", () => {
@@ -1239,6 +1671,44 @@
       els.smoothValue.textContent = state.smooth ? `${state.smooth}%` : "Exact";
       setRangeFill(els.smooth);
       queuePosterize();
+    });
+    els.blackPoint.addEventListener("input", () => {
+      state.toneBlack = Number(els.blackPoint.value);
+      els.blackValue.textContent = state.toneBlack;
+      els.toneValue.textContent = `${state.toneBlack} — ${state.toneWhite}`;
+      setRangeFill(els.blackPoint);
+      renderToneHistogram();
+      queuePosterize();
+    });
+    els.gamma.addEventListener("input", () => {
+      state.toneGamma = Number(els.gamma.value) / 100;
+      els.gammaValue.textContent = state.toneGamma.toFixed(2);
+      setRangeFill(els.gamma);
+      renderToneHistogram();
+      queuePosterize();
+    });
+    els.whitePoint.addEventListener("input", () => {
+      state.toneWhite = Number(els.whitePoint.value);
+      els.whiteValue.textContent = state.toneWhite;
+      els.toneValue.textContent = `${state.toneBlack} — ${state.toneWhite}`;
+      setRangeFill(els.whitePoint);
+      renderToneHistogram();
+      queuePosterize();
+    });
+    els.recalculate.addEventListener("click", () => {
+      if (!state.pixels || state.calculating) return;
+      clearTimeout(posterizeTimer);
+      posterize(state.calculationRevision);
+    });
+    els.autoToggle.addEventListener("click", () => {
+      state.auto = !state.auto;
+      state.autoPreferenceTouched = true;
+      updateCalculationControl();
+      if (state.auto && state.dirty && !state.calculating) {
+        const revision = state.calculationRevision;
+        els.status.textContent = "Updating posterize";
+        posterizeTimer = setTimeout(() => posterize(revision), 80);
+      }
     });
     $$(".view-tab").forEach(tab => tab.addEventListener("click", () => {
       state.view = tab.dataset.view;
@@ -1322,6 +1792,7 @@
           p.drawingContext.drawImage(state.image, 0, 0, state.width, state.height);
         } else if (state.view === "vector") {
           if (state.posterCanvas) p.drawingContext.drawImage(state.posterCanvas, 0, 0);
+          else p.drawingContext.drawImage(state.image, 0, 0, state.width, state.height);
         } else {
           const ordered = [...state.layers].sort((a, b) => (a.z || 0) - (b.z || 0));
           for (const layer of ordered) drawLayer(p, layer);
