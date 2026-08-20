@@ -1,5 +1,6 @@
 import { useAppStore } from "./useAppStore.js";
 import { createDefaultEdge, groupEdgeKey } from "../lib/edges.js";
+import { hexToRgb } from "../lib/color.js";
 import {
   layerId,
   buildPosterCanvas,
@@ -71,6 +72,40 @@ export function toggleLayerSelection(layer) {
   if (next.has(id)) next.delete(id);
   else next.add(id);
   useAppStore.setState({ selectedLayerIds: next });
+}
+
+export function setLayerColor(layer, hex) {
+  const nextHex = hex.toUpperCase();
+  if (!/^#[0-9A-F]{6}$/.test(nextHex)) return false;
+
+  const { calculating, layers, edges, expandedEdges } = useAppStore.getState();
+  if (calculating) return false;
+  const id = layerId(layer);
+  const current = layers.find(candidate => layerId(candidate) === id);
+  if (!current || current.hex === nextHex) return Boolean(current);
+
+  const previousHex = current.hex;
+  const nextLayers = layers.map(candidate => layerId(candidate) === id
+    ? { ...candidate, hex: nextHex, rgb: hexToRgb(nextHex) }
+    : candidate);
+
+  // Per-layer edge controls are keyed by color. Carry customized settings to
+  // the replacement color and prune the old key when no other layer uses it.
+  const nextEdges = new Map(edges);
+  const previousEdge = nextEdges.get(previousHex);
+  if (previousEdge && !nextEdges.has(nextHex)) {
+    nextEdges.set(nextHex, { ...previousEdge, key: nextHex });
+  }
+  const nextExpandedEdges = new Set(expandedEdges);
+  if (nextExpandedEdges.has(previousHex)) nextExpandedEdges.add(nextHex);
+  if (!nextLayers.some(candidate => candidate.hex === previousHex)) {
+    nextEdges.delete(previousHex);
+    nextExpandedEdges.delete(previousHex);
+  }
+
+  useAppStore.setState({ layers: nextLayers, edges: nextEdges, expandedEdges: nextExpandedEdges });
+  refreshLayerRendering();
+  return true;
 }
 
 // Recomputes each layer's stacking index (0..n) and rebuilds the composited

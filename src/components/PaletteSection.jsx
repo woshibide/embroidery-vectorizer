@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useAppStore } from "../store/useAppStore.js";
 import {
   toggleLayerSelection,
+  setLayerColor,
   mergeSelectedLayers,
   addLayerToGroup,
   unmergeLayerGroup,
@@ -65,21 +66,40 @@ function PaletteItem({ layer, total, selectable }) {
   const share = layer.pixels / total;
   const selectedLayerIds = useAppStore(state => state.selectedLayerIds);
   const selected = selectedLayerIds.has(layerId(layer));
-  const Tag = selectable ? "button" : "div";
+  const MainTag = selectable ? "button" : "div";
   return (
-    <Tag
+    <div
       className="palette-item"
-      type={selectable ? "button" : undefined}
       data-layer-id={layerId(layer)}
-      aria-pressed={selectable ? selected : undefined}
-      aria-label={selectable ? `${selected ? "Deselect" : "Select"} ${layer.name} layer, ${layer.hex}` : undefined}
-      onClick={selectable ? () => toggleLayerSelection(layer) : undefined}
+      data-selected={selectable && selected ? "true" : undefined}
     >
-      <span className="palette-swatch-wrap"><span className="palette-swatch" style={{ backgroundColor: layer.hex }} /></span>
-      <span className="palette-name">{layer.name}</span>
-      <span className="palette-hex">{layer.hex}</span>
-      <span className="palette-share">{share < .001 ? "<0.1%" : `${(share * 100).toFixed(1)}%`}</span>
-    </Tag>
+      <label className="palette-swatch-wrap" title={`Change ${layer.name} color`}>
+        <span className="palette-swatch" style={{ backgroundColor: layer.hex }} />
+        <input
+          className="palette-swatch-input"
+          type="color"
+          value={layer.hex}
+          aria-label={`Change ${layer.name} color; currently ${layer.hex}`}
+          onInput={event => setLayerColor(layer, event.currentTarget.value)}
+          onChange={event => {
+            const hex = event.currentTarget.value.toUpperCase();
+            useAppStore.getState().setStatusText(`${layer.name} changed to ${hex}`);
+            useAppStore.getState().showToast(`${layer.name} changed to ${hex}`);
+          }}
+        />
+      </label>
+      <MainTag
+        className="palette-item-main"
+        type={selectable ? "button" : undefined}
+        aria-pressed={selectable ? selected : undefined}
+        aria-label={selectable ? `${selected ? "Deselect" : "Select"} ${layer.name} layer, ${layer.hex}` : undefined}
+        onClick={selectable ? () => toggleLayerSelection(layer) : undefined}
+      >
+        <span className="palette-name">{layer.name}</span>
+        <span className="palette-hex">{layer.hex}</span>
+        <span className="palette-share">{share < .001 ? "<0.1%" : `${(share * 100).toFixed(1)}%`}</span>
+      </MainTag>
+    </div>
   );
 }
 
@@ -341,7 +361,7 @@ export default function PaletteSection() {
       <h2 className="section-title" id="output-title"><span>Layer output</span><span className="section-number">02</span></h2>
       <StatsRow />
       <PaletteVisualRow />
-      <p className="palette-guide">Click layers to select · drag ⋮ to reorder</p>
+      <p className="palette-guide">Click swatches to recolor · click layers to select · drag ⋮ to reorder</p>
       <MergeBar />
       <div className="palette" id="palette" role="list" aria-label="Extracted color layers" ref={listRef}>
         {units.map(unit => <PaletteUnit key={unit.key} unit={unit} total={total} listRef={listRef} />)}

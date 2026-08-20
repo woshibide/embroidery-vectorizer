@@ -928,33 +928,33 @@
     }
 
     .palette-output-unit:not(.palette-group-unit):is(:hover, :focus-within),
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"]) {
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"]) {
       z-index: 2;
       outline-color: var(--red);
     }
 
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"]) {
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"]) {
       background: var(--selected-surface);
     }
 
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"])
       > .palette-row-shell > :is(.palette-item, .palette-drag-handle) {
       background: transparent;
     }
 
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"])
       > .palette-transition {
       background: var(--selected-edge);
     }
 
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"])
       > .palette-transition > :is(.transition-toggle, .transition-panel) {
       background: transparent;
     }
 
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"])
       > .palette-transition > .transition-toggle:hover,
-    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[aria-pressed="true"])
+    .palette-output-unit:not(.palette-group-unit):has(> .palette-row-shell > .palette-item[data-selected="true"])
       > .palette-transition.is-open > .transition-toggle {
       background: var(--selected-edge-active);
     }
@@ -983,15 +983,24 @@
 
     .palette-item {
       display: grid;
-      grid-template-columns: 24px minmax(0, 1fr) auto 34px;
+      grid-template-columns: 24px minmax(0, 1fr);
+      align-items: center;
+      width: 100%;
+      min-height: 30px;
+      border-bottom: 1px solid #ffd0c9;
+      background: #fff;
+    }
+
+    .palette-item-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto 34px;
       align-items: center;
       gap: 9px;
       width: 100%;
-      min-height: 30px;
+      min-height: 29px;
       padding: 0;
       border: 0;
-      border-bottom: 1px solid #ffd0c9;
-      background: #fff;
+      background: transparent;
       color: var(--red);
       cursor: default;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -1000,7 +1009,7 @@
       text-transform: uppercase;
     }
 
-    button.palette-item { cursor: pointer; }
+    button.palette-item-main { cursor: pointer; }
 
     .palette-drag-handle {
       display: grid;
@@ -1342,8 +1351,10 @@
       line-height: 1.35;
     }
 
-    .palette-swatch-wrap { display: grid; width: 24px; height: 24px; place-items: center; }
+    .palette-swatch-wrap { display: grid; width: 24px; height: 24px; place-items: center; position: relative; cursor: pointer; }
     .palette-swatch { display: block; width: 22px; height: 22px; border: 1px solid var(--red); }
+    .palette-swatch-input { position: absolute; inset: 1px; width: 22px; height: 22px; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+    .palette-swatch-wrap:focus-within .palette-swatch { outline: 2px solid var(--red); outline-offset: 2px; }
     .palette-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .palette-hex { color: var(--muted); }
     .palette-share { color: var(--red); text-align: right; }

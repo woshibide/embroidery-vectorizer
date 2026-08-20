@@ -1,4 +1,4 @@
-# IMAGE TRACE 2000
+# IMAGE TRACER 2000
 
 > its like in illustrator, but better 
 

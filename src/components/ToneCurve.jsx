@@ -343,7 +343,7 @@ export default function ToneCurve() {
         </div>
         <div className="tone-sliders">
           <label className="tone-slider">
-            <span className="tone-slider-head"><span>Analyze from</span><output>{toneBlack}</output></span>
+            <span className="tone-slider-head"><span>Blacks cut off</span><output>{toneBlack}</output></span>
             <input
               type="range"
               min="0"
@@ -360,7 +360,7 @@ export default function ToneCurve() {
             />
           </label>
           <label className="tone-slider">
-            <span className="tone-slider-head"><span>Analyze to</span><output>{toneWhite}</output></span>
+            <span className="tone-slider-head"><span>Whites cut off</span><output>{toneWhite}</output></span>
             <input
               type="range"
               min="1"
