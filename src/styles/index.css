@@ -440,6 +440,7 @@
       height: 100vh;
       background: #fff;
       overflow: hidden;
+      container: workspace / inline-size;
     }
 
     .workspace-bar {
@@ -999,6 +1000,7 @@
       width: 100%;
       min-height: 29px;
       padding: 0;
+      padding-left: 9px;
       border: 0;
       background: transparent;
       color: var(--red);
@@ -1383,4 +1385,19 @@
       .calculation-control { grid-column: 1 / -1; grid-row: 2; max-width: none; }
       #canvas-wrap { top: 121px; }
       .zoom-readout, #zoom-out, #zoom-in { display: none; }
+    }
+
+    /* Once there is room for the 330px view tabs, a 16px gutter, and a
+       useful 320px calculation control, pin its center to the canvas split. */
+    @container workspace (min-width: 1052px) {
+      .workspace-bar { grid-template-columns: auto 1fr auto; }
+      .view-tabs { grid-column: 1; }
+      .canvas-actions { grid-column: 3; justify-self: end; }
+      .calculation-control {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: clamp(320px, calc(100% - 732px), 640px);
+        transform: translate(-50%, -50%);
+      }
     }

@@ -131,6 +131,12 @@ function GroupColorControl({ unit, edgeTarget }) {
   );
 }
 
+function formatStat(value) {
+  return typeof value === "number"
+    ? String(value).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+    : value;
+}
+
 function StatsRow() {
   const nodes = useAppStore(state => state.nodeCount ?? "—");
   const pixels = useAppStore(state => state.visiblePixelCount ?? "—");
@@ -139,9 +145,9 @@ function StatsRow() {
   const outputCount = layers.length ? getLayerUnits(layers, layerGroups).length : "—";
   return (
     <div className="stats">
-      <div className="stat"><span className="stat-label">Layers</span><span className="stat-value">{outputCount}</span></div>
-      <div className="stat"><span className="stat-label">Nodes</span><span className="stat-value">{nodes}</span></div>
-      <div className="stat"><span className="stat-label">Pixels</span><span className="stat-value">{pixels}</span></div>
+      <div className="stat"><span className="stat-label">Layers</span><span className="stat-value">{formatStat(outputCount)}</span></div>
+      <div className="stat"><span className="stat-label">Nodes</span><span className="stat-value">{formatStat(nodes)}</span></div>
+      <div className="stat"><span className="stat-label">Pixels</span><span className="stat-value">{formatStat(pixels)}</span></div>
     </div>
   );
 }

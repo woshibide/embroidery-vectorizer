@@ -69,7 +69,7 @@ export function createInitialState() {
     progressLabel: "Ready",
 
     // Rendering/viewport
-    view: "vector",
+    view: "split",
     posterCanvas: null,
     scale: 1,
     fitScale: 1,
