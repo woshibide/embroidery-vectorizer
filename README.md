@@ -81,6 +81,10 @@ Add releases to `src/lib/releases.js`, newest first, with brief user-facing note
 Rebuild with `npm run build` to include them in the generated `docs/index.html`.
 Project-wide instructions in `AGENTS.md` require coding agents to maintain this convention and the release notes with every shipped change.
 
+### 0.3.0.1
+
+- Fix dependency installation blocking Vercel deployments.
+
 ### 0.3.0.0
 
 - Pick a color on the artwork to select and reveal its sidebar layer.

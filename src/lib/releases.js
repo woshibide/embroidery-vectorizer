@@ -1,5 +1,11 @@
 export const releases = [
   {
+    version: "0.3.0.1",
+    updates: [
+      "Fix dependency installation blocking Vercel deployments."
+    ]
+  },
+  {
     version: "0.3.0.0",
     updates: [
       "Pick a color on the artwork to select and reveal its sidebar layer.",
