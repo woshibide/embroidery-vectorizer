@@ -2,7 +2,8 @@ export const releases = [
   {
     version: "0.3.0.1",
     updates: [
-      "Fix dependency installation blocking Vercel deployments."
+      "Fix dependency installation blocking Vercel deployments.",
+      "Point Vercel to the generated docs folder so deployments find the built app."
     ]
   },
   {

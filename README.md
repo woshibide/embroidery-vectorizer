@@ -84,6 +84,7 @@ Project-wide instructions in `AGENTS.md` require coding agents to maintain this 
 ### 0.3.0.1
 
 - Fix dependency installation blocking Vercel deployments.
+- Point Vercel to the generated docs folder so deployments find the built app.
 
 ### 0.3.0.0
 
@@ -118,6 +119,9 @@ npm run build
 ```
 
 Produces a single `docs/index.html` with everything inlined. Commit that file to the repo.
+
+For Vercel, the committed `vercel.json` sets the output directory to `docs`, matching Vite's build configuration.
+Vercel runs `npm run build` and publishes that directory.
 
 **One-time setup**: in the repo's GitHub Settings → Pages, choose "Deploy from a branch" → branch `main`, folder `/docs`. No GitHub Actions workflow is needed — GitHub Pages serves the committed `docs/index.html` directly, same as the previous build-free setup.
 
