@@ -2,3 +2,9 @@ Shirt-PSD
 .DS_Store
 node_modules
 legacy-index.html.ref
+node_modules/
+.env
+.env.*
+!.env.example
+.vercel/
+*.pem

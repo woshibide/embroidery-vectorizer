@@ -1,0 +1,9 @@
+{
+  "name": "Image Tracer 2000",
+  "description": "Posterizes a PNG or JPG into a controlled palette and exports each color as its own named SVG layer.",
+  "type": "tool",
+  "client": "Paradigm",
+  "tags": ["svg export"],
+  "author": "Pyotr",
+  "status": "active"
+}
